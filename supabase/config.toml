@@ -1,0 +1,5 @@
+[functions.generate-draft]
+verify_jwt = true
+
+[functions.news-pipeline]
+verify_jwt = true
