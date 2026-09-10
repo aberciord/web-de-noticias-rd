@@ -59,6 +59,16 @@ export interface Banner {
   creado_en: string;
 }
 
+export interface Comment {
+  id: number;
+  article_id: string;
+  user_id: string;
+  autor_nombre: string;
+  contenido: string;
+  creado_en: string;
+  eliminado: boolean;
+}
+
 export const CATEGORIAS: { value: Categoria; label: string; labelEn: string }[] = [
   { value: 'noticias', label: 'Noticias', labelEn: 'News' },
   { value: 'deportes', label: 'Deportes', labelEn: 'Sports' },

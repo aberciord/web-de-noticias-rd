@@ -6,6 +6,7 @@ import type { Article, Banner } from '@/lib/types';
 import { formatFecha, tiempoRelativo } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
 import ArticleCard from '@/components/public/ArticleCard';
+import CommentSection from '@/components/public/CommentSection';
 
 interface ArticlePageProps {
   articles: Article[];
@@ -183,6 +184,9 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
               Copiar enlace
             </button>
           </div>
+
+          {/* Comments */}
+          <CommentSection articleId={article.id} />
 
           {/* Navigation */}
           <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-200">

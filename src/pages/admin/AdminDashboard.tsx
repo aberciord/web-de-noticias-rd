@@ -1,13 +1,23 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FileEdit, CheckCircle, XCircle, Globe, TrendingUp, Clock, ArrowRight } from 'lucide-react';
+import { FileEdit, CheckCircle, XCircle, Globe, TrendingUp, Clock, ArrowRight, Zap, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { CATEGORIAS, getEstadoColor, getEstadoLabel } from '@/lib/types';
 import type { Article, Categoria, EstadoArticulo } from '@/lib/types';
+
+interface CronRunLog {
+  id: number;
+  job_name: string;
+  run_at: string;
+  status_code: number;
+  response_body: string;
+  success: boolean;
+}
 import { tiempoRelativo } from '@/lib/format';
 
 export default function AdminDashboard() {
   const [articles, setArticles] = useState<Article[]>([]);
+  const [cronLogs, setCronLogs] = useState<CronRunLog[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,6 +29,15 @@ export default function AdminDashboard() {
       .then(({ data }) => {
         setArticles(data as Article[] ?? []);
         setLoading(false);
+      });
+
+    supabase
+      .from('cron_run_log')
+      .select('*')
+      .order('run_at', { ascending: false })
+      .limit(10)
+      .then(({ data }) => {
+        setCronLogs(data as CronRunLog[] ?? []);
       });
   }, []);
 
@@ -142,6 +161,66 @@ export default function AdminDashboard() {
             Total publicado: {counts.publicado}
           </div>
         </div>
+      </div>
+
+      {/* Pipeline execution log */}
+      <div className="bg-white rounded-xl border border-slate-200 p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Zap className="w-5 h-5 text-amber-500" />
+          <h2 className="font-bold text-slate-900">Ejecuciones del pipeline automático</h2>
+          <span className="text-xs text-slate-400 ml-auto">7:00 AM y 3:00 PM (hora RD)</span>
+        </div>
+        {cronLogs.length === 0 ? (
+          <p className="text-sm text-slate-400 py-6 text-center">
+            No hay ejecuciones registradas. El pipeline corre automáticamente dos veces al día.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-left text-xs text-slate-500 uppercase tracking-wider">
+                  <th className="pb-2 pr-4 font-semibold">Fecha</th>
+                  <th className="pb-2 pr-4 font-semibold">Estado</th>
+                  <th className="pb-2 pr-4 font-semibold">Resultado</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {cronLogs.map((log) => {
+                  let summary = '';
+                  try {
+                    const parsed = JSON.parse(log.response_body);
+                    summary = parsed.sources_checked != null
+                      ? `${parsed.raw_items_collected} items, ${parsed.articles_generated} artículos`
+                      : parsed.message ?? parsed.error ?? '';
+                  } catch {
+                    summary = log.response_body?.substring(0, 80) ?? '';
+                  }
+                  return (
+                    <tr key={log.id} className="py-2">
+                      <td className="py-3 pr-4 text-slate-600 whitespace-nowrap">
+                        {new Date(log.run_at).toLocaleString('es-DO', {
+                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                        })}
+                      </td>
+                      <td className="py-3 pr-4">
+                        {log.success ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-1 rounded">
+                            <CheckCircle className="w-3 h-3" /> OK
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-red-700 bg-red-50 px-2 py-1 rounded">
+                            <AlertTriangle className="w-3 h-3" /> Error
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 text-slate-600 text-xs">{summary}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

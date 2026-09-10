@@ -57,9 +57,6 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
             >
               EN
             </button>
-            <Link to="/admin" className="hover:text-white transition-colors font-medium">
-              Admin
-            </Link>
           </div>
         </div>
       </div>
@@ -187,7 +184,6 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
               <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Información</h3>
               <ul className="space-y-2">
                 <li><Link to="/acerca" className="text-sm text-slate-400 hover:text-white transition-colors">Acerca de nosotros</Link></li>
-                <li><Link to="/admin" className="text-sm text-slate-400 hover:text-white transition-colors">Panel editorial</Link></li>
                 <li><span className="text-sm text-slate-400">contacto@noticiasrd.do</span></li>
               </ul>
             </div>

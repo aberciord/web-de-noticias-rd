@@ -12,6 +12,7 @@ import ReviewQueue from '@/pages/admin/ReviewQueue';
 import ArticleEditor from '@/pages/admin/ArticleEditor';
 import SourcesManager from '@/pages/admin/SourcesManager';
 import BannersManager from '@/pages/admin/BannersManager';
+import CommentsManager from '@/pages/admin/CommentsManager';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Article } from '@/lib/types';
@@ -80,6 +81,7 @@ function App() {
                     <Route path="editar/:id" element={<ArticleEditor />} />
                     <Route path="fuentes" element={<SourcesManager />} />
                     <Route path="banners" element={<BannersManager />} />
+                    <Route path="comentarios" element={<CommentsManager />} />
                     <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
                   </Routes>
                 </AdminLayout>

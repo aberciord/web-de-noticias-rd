@@ -42,8 +42,15 @@ Deno.serve(async (req: Request) => {
 
     if (sourcesError) throw sourcesError;
     if (!sources || sources.length === 0) {
+      const msg = JSON.stringify({ message: "No hay fuentes activas configuradas" });
+      await supabase.from("cron_run_log").insert({
+        job_name: "news-pipeline",
+        status_code: 200,
+        response_body: msg,
+        success: true,
+      });
       return new Response(
-        JSON.stringify({ message: "No hay fuentes activas configuradas" }),
+        msg,
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -105,11 +112,18 @@ Deno.serve(async (req: Request) => {
     }
 
     if (!ANTHROPIC_API_KEY) {
+      const noKeyBody = JSON.stringify({
+        ...results,
+        message: "ANTHROPIC_API_KEY no configurada. Se recolectaron items pero no se generaron artículos.",
+      });
+      await supabase.from("cron_run_log").insert({
+        job_name: "news-pipeline",
+        status_code: 200,
+        response_body: noKeyBody,
+        success: true,
+      });
       return new Response(
-        JSON.stringify({
-          ...results,
-          message: "ANTHROPIC_API_KEY no configurada. Se recolectaron items pero no se generaron artículos.",
-        }),
+        noKeyBody,
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -260,13 +274,29 @@ Responde SOLO en JSON (sin markdown, sin texto adicional):
         .eq("procesado", false);
     }
 
+    const responseBody = JSON.stringify(results);
+    await supabase.from("cron_run_log").insert({
+      job_name: "news-pipeline",
+      status_code: 200,
+      response_body: responseBody,
+      success: true,
+    });
+
     return new Response(
-      JSON.stringify(results),
+      responseBody,
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
+    const errBody = JSON.stringify({ error: err instanceof Error ? err.message : "Error interno" });
+    await supabase.from("cron_run_log").insert({
+      job_name: "news-pipeline",
+      status_code: 500,
+      response_body: errBody,
+      success: false,
+    });
+
     return new Response(
-      JSON.stringify({ error: err instanceof Error ? err.message : "Error interno" }),
+      errBody,
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
