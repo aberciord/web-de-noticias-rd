@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { LanguageProvider } from '@/context/LanguageContext';
 import PublicLayout from '@/components/public/PublicLayout';
 import HomePage from '@/pages/public/HomePage';
 import CategoryPage from '@/pages/public/CategoryPage';
@@ -42,21 +43,25 @@ function PublicSite() {
 
   if (loading) {
     return (
-      <PublicLayout>
-        <div className="max-w-7xl mx-auto px-4 py-16 text-center text-slate-400">Cargando noticias...</div>
-      </PublicLayout>
+      <LanguageProvider>
+        <PublicLayout>
+          <div className="max-w-7xl mx-auto px-4 py-16 text-center text-slate-400">Cargando noticias...</div>
+        </PublicLayout>
+      </LanguageProvider>
     );
   }
 
   return (
-    <PublicLayout>
-      <Routes>
-        <Route path="/" element={<HomePage articles={articles} />} />
-        <Route path="/categoria/:categoria" element={<CategoryPage articles={articles} />} />
-        <Route path="/articulo/:id" element={<ArticlePage articles={articles} />} />
-        <Route path="/acerca" element={<AboutPage />} />
-      </Routes>
-    </PublicLayout>
+    <LanguageProvider>
+      <PublicLayout>
+        <Routes>
+          <Route path="/" element={<HomePage articles={articles} />} />
+          <Route path="/categoria/:categoria" element={<CategoryPage articles={articles} />} />
+          <Route path="/articulo/:id" element={<ArticlePage articles={articles} />} />
+          <Route path="/acerca" element={<AboutPage />} />
+        </Routes>
+      </PublicLayout>
+    </LanguageProvider>
   );
 }
 

@@ -4,8 +4,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        serif: ['Georgia', 'Cambria', 'Times New Roman', 'serif'],
+        sans: ['"Space Grotesk"', 'system-ui', '-apple-system', 'sans-serif'],
+        heading: ['Fraunces', 'Georgia', 'serif'],
       },
     },
   },

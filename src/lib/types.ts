@@ -83,8 +83,10 @@ export const ESTADOS: { value: EstadoArticulo; label: string; color: string }[] 
   { value: 'publicado', label: 'Publicado', color: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
 ];
 
-export function getCategoriaLabel(value: Categoria): string {
-  return CATEGORIAS.find((c) => c.value === value)?.label ?? value;
+export function getCategoriaLabel(value: Categoria, language: 'es' | 'en' = 'es'): string {
+  const cat = CATEGORIAS.find((c) => c.value === value);
+  if (!cat) return value;
+  return language === 'en' ? cat.labelEn : cat.label;
 }
 
 export function getEstadoLabel(value: EstadoArticulo): string {

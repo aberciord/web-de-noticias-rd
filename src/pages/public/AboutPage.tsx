@@ -3,11 +3,11 @@ import { Newspaper, Shield, FileText, Globe2 } from 'lucide-react';
 export default function AboutPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
-      <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-6">Acerca de NoticiasRD</h1>
+      <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-6">Acerca de El poder del pueblo RD</h1>
 
       <div className="prose prose-slate max-w-none space-y-6">
         <p className="text-lg text-slate-700 leading-relaxed">
-          NoticiasRD es un portal de noticias de la República Dominicana que ofrece información
+          El poder del pueblo RD es un portal de noticias de la República Dominicana que ofrece información
           actualizada sobre noticias, deportes, política y farándula, con contenido original en
           español e inglés.
         </p>

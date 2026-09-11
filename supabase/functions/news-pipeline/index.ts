@@ -67,7 +67,7 @@ Deno.serve(async (req: Request) => {
     for (const source of sources as Source[]) {
       try {
         const feedResponse = await fetch(source.feed_url, {
-          headers: { "User-Agent": "NoticiasRD-Bot/1.0" },
+          headers: { "User-Agent": "ElPoderDelPuebloRD-Bot/1.0" },
           signal: AbortSignal.timeout(10000),
         });
 

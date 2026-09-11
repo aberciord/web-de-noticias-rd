@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Newspaper, Menu, X, Search, Globe } from 'lucide-react';
 import { CATEGORIAS } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
+import { useLanguage } from '@/context/LanguageContext';
 import type { Banner } from '@/lib/types';
 
 interface PublicLayoutProps {
@@ -12,7 +13,7 @@ interface PublicLayoutProps {
 export default function PublicLayout({ children }: PublicLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [headerBanner, setHeaderBanner] = useState<Banner | null>(null);
-  const [language, setLanguage] = useState<'es' | 'en'>('es');
+  const { language, setLanguage } = useLanguage();
   const location = useLocation();
 
   useEffect(() => {
@@ -32,8 +33,8 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
   }, []);
 
   const navLinks = [
-    { to: '/', label: 'Inicio' },
-    ...CATEGORIAS.map((c) => ({ to: `/categoria/${c.value}`, label: c.label })),
+    { to: '/', label: language === 'en' ? 'Home' : 'Inicio' },
+    ...CATEGORIAS.map((c) => ({ to: `/categoria/${c.value}`, label: language === 'en' ? c.labelEn : c.label })),
   ];
 
   return (
@@ -80,15 +81,16 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
       <header className="bg-white border-b-2 border-slate-900 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-20">
-            <Link to="/" className="flex items-center gap-2 group">
-              <div className="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105">
-                <Newspaper className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900 leading-none tracking-tight">
-                  Noticias<span className="text-red-600">RD</span>
-                </h1>
-                <p className="text-xs text-slate-500 leading-none mt-1">Portal de noticias dominicano</p>
+            <Link to="/" className="flex items-center gap-3 group">
+              <img
+                src="/logo.png"
+                alt="El poder del pueblo RD"
+                className="h-14 w-auto transition-transform group-hover:scale-105"
+              />
+              <div className="hidden sm:block">
+                <p className="text-xs text-slate-500 leading-none">
+                  {language === 'en' ? 'Dominican news portal' : 'Portal de noticias dominicano'}
+                </p>
               </div>
             </Link>
 
@@ -158,39 +160,53 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                 <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
                   <Newspaper className="w-5 h-5 text-slate-900" />
                 </div>
-                <span className="text-xl font-bold text-white">
-                  Noticias<span className="text-red-500">RD</span>
+                <span className="font-heading text-xl font-bold text-white">
+                  El poder del pueblo <span className="text-red-500">RD</span>
                 </span>
               </div>
               <p className="text-sm text-slate-400 max-w-md leading-relaxed">
-                Portal de noticias de la República Dominicana. Información actualizada sobre
-                noticias, deportes, política y farándula. Contenido original generado respetando
-                el derecho de autor conforme a la Ley 65-00.
+                {language === 'en'
+                  ? 'News portal of the Dominican Republic. Up-to-date information on news, sports, politics, and entertainment. Original content generated respecting copyright under Law 65-00.'
+                  : 'Portal de noticias de la República Dominicana. Información actualizada sobre noticias, deportes, política y farándula. Contenido original generado respetando el derecho de autor conforme a la Ley 65-00.'}
               </p>
             </div>
             <div>
-              <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Secciones</h3>
+              <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">
+                {language === 'en' ? 'Sections' : 'Secciones'}
+              </h3>
               <ul className="space-y-2">
                 {CATEGORIAS.map((cat) => (
                   <li key={cat.value}>
                     <Link to={`/categoria/${cat.value}`} className="text-sm text-slate-400 hover:text-white transition-colors">
-                      {cat.label}
+                      {language === 'en' ? cat.labelEn : cat.label}
                     </Link>
                   </li>
                 ))}
               </ul>
             </div>
             <div>
-              <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Información</h3>
+              <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">
+                {language === 'en' ? 'Information' : 'Información'}
+              </h3>
               <ul className="space-y-2">
-                <li><Link to="/acerca" className="text-sm text-slate-400 hover:text-white transition-colors">Acerca de nosotros</Link></li>
-                <li><span className="text-sm text-slate-400">contacto@noticiasrd.do</span></li>
+                <li>
+                  <Link to="/acerca" className="text-sm text-slate-400 hover:text-white transition-colors">
+                    {language === 'en' ? 'About us' : 'Acerca de nosotros'}
+                  </Link>
+                </li>
+                <li><span className="text-sm text-slate-400">contacto@elpoderdelpueblord.com</span></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-slate-700 mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-slate-500">© {new Date().getFullYear()} NoticiasRD. Todos los derechos reservados.</p>
-            <p className="text-xs text-slate-500">Las notas publicadas citan su fuente original con enlace.</p>
+            <p className="text-xs text-slate-500">
+              © {new Date().getFullYear()} El poder del pueblo RD. {language === 'en' ? 'All rights reserved.' : 'Todos los derechos reservados.'}
+            </p>
+            <p className="text-xs text-slate-500">
+              {language === 'en'
+                ? 'Published articles cite their original source with a link.'
+                : 'Las notas publicadas citan su fuente original con enlace.'}
+            </p>
           </div>
         </div>
       </footer>

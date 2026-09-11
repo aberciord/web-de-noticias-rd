@@ -1,10 +1,12 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Clock, ExternalLink, Share2, ChevronLeft, ChevronRight, User } from 'lucide-react';
-import { CATEGORIAS, getCategoriaLabel } from '@/lib/types';
+import { getCategoriaLabel } from '@/lib/types';
 import type { Article, Banner } from '@/lib/types';
 import { formatFecha, tiempoRelativo } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
+import { useLanguage } from '@/context/LanguageContext';
+import { useDocumentMeta } from '@/lib/useDocumentMeta';
 import ArticleCard from '@/components/public/ArticleCard';
 import CommentSection from '@/components/public/CommentSection';
 
@@ -14,11 +16,19 @@ interface ArticlePageProps {
 
 export default function ArticlePage({ articles }: ArticlePageProps) {
   const { id } = useParams<{ id: string }>();
-  const [language, setLanguage] = useState<'es' | 'en'>('es');
+  const { language, setLanguage } = useLanguage();
   const [sidebarBanner, setSidebarBanner] = useState<Banner | null>(null);
   const [midBanner, setMidBanner] = useState<Banner | null>(null);
 
   const article = articles.find((a) => a.id === id);
+
+  useDocumentMeta({
+    title: article
+      ? `${language === 'es' ? article.titulo_es : article.titulo_en} — El poder del pueblo RD`
+      : 'El poder del pueblo RD',
+    description: article?.resumen_seo ?? undefined,
+    image: article?.imagen_url ?? undefined,
+  });
 
   useEffect(() => {
     supabase
@@ -45,9 +55,9 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
   if (!article) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-        <p className="text-slate-500">Artículo no encontrado.</p>
+        <p className="text-slate-500">{language === 'en' ? 'Article not found.' : 'Artículo no encontrado.'}</p>
         <Link to="/" className="mt-4 inline-block text-red-600 hover:underline">
-          Volver al inicio
+          {language === 'en' ? 'Back to home' : 'Volver al inicio'}
         </Link>
       </div>
     );
@@ -67,10 +77,10 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
     <div className="max-w-7xl mx-auto px-4 py-6">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-slate-500 mb-4">
-        <Link to="/" className="hover:text-slate-900 transition-colors">Inicio</Link>
+        <Link to="/" className="hover:text-slate-900 transition-colors">{language === 'en' ? 'Home' : 'Inicio'}</Link>
         <span>/</span>
         <Link to={`/categoria/${article.categoria}`} className="hover:text-slate-900 transition-colors">
-          {getCategoriaLabel(article.categoria)}
+          {getCategoriaLabel(article.categoria, language)}
         </Link>
       </div>
 
@@ -79,7 +89,7 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
         <article className="lg:col-span-2">
           <div className="flex items-center gap-3 mb-4">
             <span className="text-xs font-bold text-white bg-red-600 px-3 py-1 rounded-full uppercase tracking-wide">
-              {getCategoriaLabel(article.categoria)}
+              {getCategoriaLabel(article.categoria, language)}
             </span>
             <span className="text-xs text-slate-500 flex items-center gap-1">
               <Clock className="w-3 h-3" />
@@ -173,7 +183,7 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
           {/* Share */}
           <div className="mt-6 flex items-center gap-3">
             <span className="text-sm text-slate-500 flex items-center gap-1">
-              <Share2 className="w-4 h-4" /> Compartir:
+              <Share2 className="w-4 h-4" /> {language === 'en' ? 'Share:' : 'Compartir:'}
             </span>
             <button
               onClick={() => {
@@ -181,7 +191,7 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
               }}
               className="text-sm text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors"
             >
-              Copiar enlace
+              {language === 'en' ? 'Copy link' : 'Copiar enlace'}
             </button>
           </div>
 
@@ -195,14 +205,14 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
               className="flex items-center gap-1 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
-              {getCategoriaLabel(article.categoria)}
+              {getCategoriaLabel(article.categoria, language)}
             </Link>
             <Link
               to="/"
               className="flex items-center gap-1 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              Inicio
+              {language === 'en' ? 'Home' : 'Inicio'}
             </Link>
           </div>
         </article>

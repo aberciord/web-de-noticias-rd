@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Newspaper, LayoutDashboard, FileEdit, PlusCircle, Rss, Image, LogOut, ExternalLink, MessageCircle } from 'lucide-react';
+import { LayoutDashboard, FileEdit, PlusCircle, Rss, Image, LogOut, ExternalLink, MessageCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 interface AdminLayoutProps {
@@ -29,14 +29,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       {/* Sidebar */}
       <aside className="lg:w-64 bg-slate-900 text-slate-300 flex-shrink-0 lg:min-h-screen lg:fixed lg:left-0 lg:top-0 lg:bottom-0 flex flex-col z-40">
         <div className="p-5 border-b border-slate-700">
-          <a href="/" className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center">
-              <Newspaper className="w-5 h-5 text-slate-900" />
-            </div>
+          <a href="/" className="flex items-center gap-3">
+            <img src="/logo.png" alt="El poder del pueblo RD" className="h-12 w-12 rounded-lg bg-white object-contain p-1" />
             <div>
-              <span className="text-lg font-bold text-white block leading-none">
-                Noticias<span className="text-red-500">RD</span>
-              </span>
               <span className="text-xs text-slate-400">Panel editorial</span>
             </div>
           </a>

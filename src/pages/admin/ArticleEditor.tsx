@@ -1,10 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Save, CheckCircle, XCircle, Globe, ArrowLeft, Sparkles, AlertCircle, Eye } from 'lucide-react';
+import { Save, CheckCircle, XCircle, Globe, ArrowLeft, Sparkles, AlertCircle, Eye, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { CATEGORIAS, ESTADOS, getEstadoColor, getEstadoLabel } from '@/lib/types';
 import type { Article, Categoria, EstadoArticulo } from '@/lib/types';
 import { useAuth } from '@/context/AuthContext';
+
+interface PexelsResult {
+  id: number;
+  thumb_url: string;
+  full_url: string;
+  photographer: string;
+  alt: string;
+}
 
 export default function ArticleEditor() {
   const { id } = useParams<{ id: string }>();
@@ -32,6 +40,11 @@ export default function ArticleEditor() {
   const [genInput, setGenInput] = useState('');
   const [showGenPanel, setShowGenPanel] = useState(false);
   const [previewLang, setPreviewLang] = useState<'es' | 'en'>('es');
+  const [showImageSearch, setShowImageSearch] = useState(false);
+  const [imageQuery, setImageQuery] = useState('');
+  const [imageResults, setImageResults] = useState<PexelsResult[]>([]);
+  const [imageSearching, setImageSearching] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -142,6 +155,34 @@ export default function ArticleEditor() {
       setError(err instanceof Error ? err.message : 'Error al generar borrador');
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleSearchImages = async () => {
+    if (!imageQuery.trim()) return;
+    setImageSearching(true);
+    setImageError(null);
+
+    try {
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/search-images?query=${encodeURIComponent(imageQuery)}`;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const response = await fetch(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${sessionData.session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error(errBody.error || `Error ${response.status}`);
+      }
+
+      const data = await response.json();
+      setImageResults(data.results ?? []);
+    } catch (err) {
+      setImageError(err instanceof Error ? err.message : 'Error al buscar imágenes');
+    } finally {
+      setImageSearching(false);
     }
   };
 
@@ -366,7 +407,17 @@ export default function ArticleEditor() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">URL de imagen</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm font-medium text-slate-700">URL de imagen</label>
+                <button
+                  type="button"
+                  onClick={() => setShowImageSearch(!showImageSearch)}
+                  className="flex items-center gap-1 text-xs font-medium text-violet-600 hover:text-violet-700 transition-colors"
+                >
+                  <ImageIcon className="w-3.5 h-3.5" />
+                  Buscar en Pexels
+                </button>
+              </div>
               <input
                 type="url"
                 value={article.imagen_url ?? ''}
@@ -376,6 +427,52 @@ export default function ArticleEditor() {
               />
               {article.imagen_url && (
                 <img src={article.imagen_url} alt="" className="mt-2 rounded-lg w-full h-24 object-cover" />
+              )}
+
+              {showImageSearch && (
+                <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={imageQuery}
+                      onChange={(e) => setImageQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleSearchImages())}
+                      placeholder="Ej: transporte público Santo Domingo"
+                      className="flex-1 px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none bg-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSearchImages}
+                      disabled={imageSearching || !imageQuery.trim()}
+                      className="flex items-center gap-1 bg-violet-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-violet-700 disabled:opacity-50 transition-colors"
+                    >
+                      {imageSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Buscar'}
+                    </button>
+                  </div>
+
+                  {imageError && (
+                    <p className="text-xs text-red-600">{imageError}</p>
+                  )}
+
+                  {imageResults.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {imageResults.map((img) => (
+                        <button
+                          type="button"
+                          key={img.id}
+                          onClick={() => {
+                            update('imagen_url', img.full_url);
+                            setShowImageSearch(false);
+                          }}
+                          className="group relative rounded-lg overflow-hidden border-2 border-transparent hover:border-violet-500 transition-colors"
+                          title={`Foto de ${img.photographer} en Pexels`}
+                        >
+                          <img src={img.thumb_url} alt={img.alt} className="w-full h-16 object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 

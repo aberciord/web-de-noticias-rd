@@ -3,3 +3,6 @@ verify_jwt = true
 
 [functions.news-pipeline]
 verify_jwt = false
+
+[functions.search-images]
+verify_jwt = true

@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Newspaper, Mail, Lock, AlertCircle } from 'lucide-react';
+import { Mail, Lock, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 export default function AdminLogin() {
-  const { signIn, signUp } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -17,9 +16,7 @@ export default function AdminLogin() {
     setError(null);
     setLoading(true);
 
-    const result = mode === 'signin'
-      ? await signIn(email, password)
-      : await signUp(email, password);
+    const result = await signIn(email, password);
 
     setLoading(false);
 
@@ -35,34 +32,13 @@ export default function AdminLogin() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-4">
-            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center">
-              <Newspaper className="w-7 h-7 text-slate-900" />
-            </div>
+            <img src="/logo.png" alt="El poder del pueblo RD" className="h-20 w-20 rounded-xl bg-white object-contain p-1.5" />
           </Link>
           <h1 className="text-2xl font-bold text-white">Panel Editorial</h1>
-          <p className="text-slate-400 text-sm mt-1">NoticiasRD — Acceso para editores</p>
+          <p className="text-slate-400 text-sm mt-1">El poder del pueblo RD — Acceso para editores</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <div className="flex gap-2 mb-6 bg-slate-100 rounded-lg p-1">
-            <button
-              onClick={() => { setMode('signin'); setError(null); }}
-              className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${
-                mode === 'signin' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
-              }`}
-            >
-              Iniciar sesión
-            </button>
-            <button
-              onClick={() => { setMode('signup'); setError(null); }}
-              className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${
-                mode === 'signup' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
-              }`}
-            >
-              Crear cuenta
-            </button>
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Correo electrónico</label>
@@ -74,7 +50,7 @@ export default function AdminLogin() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-11 pr-4 py-3 border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all outline-none"
-                  placeholder="editor@noticiasrd.do"
+                  placeholder="editor@elpoderdelpueblord.com"
                 />
               </div>
             </div>
@@ -106,7 +82,7 @@ export default function AdminLogin() {
               disabled={loading}
               className="w-full bg-slate-900 text-white font-semibold py-3 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
             >
-              {loading ? 'Procesando...' : mode === 'signin' ? 'Iniciar sesión' : 'Crear cuenta'}
+              {loading ? 'Procesando...' : 'Iniciar sesión'}
             </button>
           </form>
 
