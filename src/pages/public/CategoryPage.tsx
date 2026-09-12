@@ -35,7 +35,7 @@ export default function CategoryPage({ articles }: CategoryPageProps) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      <div className="mb-8 border-b-2 border-slate-900 pb-4">
+      <div className="mb-8 border-b-2 border-brand-blue pb-4">
         <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">{catLabel}</h1>
         <p className="text-slate-500 mt-2">
           {language === 'en'

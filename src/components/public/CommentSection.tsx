@@ -125,7 +125,7 @@ export default function CommentSection({ articleId }: CommentSectionProps) {
             <button
               type="submit"
               disabled={submitting || !commentText.trim()}
-              className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 bg-brand-blue text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-blue-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

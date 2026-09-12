@@ -36,7 +36,7 @@ export default function HomePage({ articles }: HomePageProps) {
           {/* Featured article */}
           <Link
             to={`/articulo/${featured.id}`}
-            className="lg:col-span-2 group block relative rounded-2xl overflow-hidden bg-slate-900 aspect-[16/10] lg:aspect-auto"
+            className="lg:col-span-2 group block relative rounded-2xl overflow-hidden bg-brand-blue-dark aspect-[16/10] lg:aspect-auto"
           >
             {featured.imagen_url && (
               <img
@@ -45,10 +45,10 @@ export default function HomePage({ articles }: HomePageProps) {
                 className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-70 group-hover:scale-105 transition-all duration-500"
               />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-brand-blue-dark via-brand-blue-dark/60 to-transparent" />
             <div className="relative h-full flex flex-col justify-end p-6 sm:p-8">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs font-bold text-white bg-red-600 px-3 py-1 rounded-full uppercase tracking-wide">
+                <span className="text-xs font-bold text-white bg-brand-red px-3 py-1 rounded-full uppercase tracking-wide">
                   {language === 'en'
                     ? CATEGORIAS.find((c) => c.value === featured.categoria)?.labelEn
                     : CATEGORIAS.find((c) => c.value === featured.categoria)?.label}
@@ -93,7 +93,7 @@ export default function HomePage({ articles }: HomePageProps) {
           <Link
             key={cat.value}
             to={`/categoria/${cat.value}`}
-            className="px-3 py-1.5 rounded-full text-sm font-medium bg-slate-100 text-slate-700 hover:bg-slate-900 hover:text-white transition-colors"
+            className="px-3 py-1.5 rounded-full text-sm font-medium bg-slate-100 text-slate-700 hover:bg-brand-blue hover:text-white transition-colors"
           >
             {language === 'en' ? cat.labelEn : cat.label}
           </Link>
@@ -134,7 +134,7 @@ function CategorySection({ categoria, articles }: { categoria: Categoria; articl
 
   return (
     <section className="mb-10">
-      <div className="flex items-center justify-between mb-4 border-b-2 border-slate-900 pb-2">
+      <div className="flex items-center justify-between mb-4 border-b-2 border-brand-blue pb-2">
         <h2 className="text-xl font-bold text-slate-900">{language === 'en' ? cat.labelEn : cat.label}</h2>
         <Link
           to={`/categoria/${categoria}`}

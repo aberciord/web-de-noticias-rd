@@ -7,6 +7,15 @@ export default {
         sans: ['"Space Grotesk"', 'system-ui', '-apple-system', 'sans-serif'],
         heading: ['Fraunces', 'Georgia', 'serif'],
       },
+      colors: {
+        brand: {
+          blue: '#0A3161',
+          'blue-light': '#164B8F',
+          'blue-dark': '#061F3D',
+          red: '#CE1126',
+          'red-dark': '#A50D1E',
+        },
+      },
     },
   },
   plugins: [],

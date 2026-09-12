@@ -4,6 +4,7 @@ import { Newspaper, Menu, X, Search, Globe } from 'lucide-react';
 import { CATEGORIAS } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/context/LanguageContext';
+import NewsletterSignup from '@/components/public/NewsletterSignup';
 import type { Banner } from '@/lib/types';
 
 interface PublicLayoutProps {
@@ -40,25 +41,18 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Top bar */}
-      <div className="bg-slate-900 text-slate-300 text-xs">
+      <div className="bg-brand-blue-dark text-blue-100 text-xs">
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
           <span className="hidden sm:inline">
             {new Date().toLocaleDateString('es-DO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </span>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setLanguage('es')}
-              className={`flex items-center gap-1 hover:text-white transition-colors ${language === 'es' ? 'text-white font-semibold' : ''}`}
-            >
-              <Globe className="w-3 h-3" /> ES
-            </button>
-            <button
-              onClick={() => setLanguage('en')}
-              className={`hover:text-white transition-colors ${language === 'en' ? 'text-white font-semibold' : ''}`}
-            >
-              EN
-            </button>
-          </div>
+          <button
+            onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
+            className="flex items-center gap-1.5 hover:text-white transition-colors font-medium"
+          >
+            <Globe className="w-3.5 h-3.5" />
+            {language === 'es' ? 'Cambiar a inglés' : 'Cambiar a español'}
+          </button>
         </div>
       </div>
 
@@ -78,16 +72,16 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
       )}
 
       {/* Header */}
-      <header className="bg-white border-b-2 border-slate-900 sticky top-0 z-50 shadow-sm">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-20">
+          <div className="flex items-center justify-between h-24 sm:h-28">
             <Link to="/" className="flex items-center gap-3 group">
               <img
                 src="/logo.png"
                 alt="El poder del pueblo RD"
-                className="h-14 w-auto transition-transform group-hover:scale-105"
+                className="h-20 sm:h-24 w-auto transition-transform group-hover:scale-105"
               />
-              <div className="hidden sm:block">
+              <div className="hidden md:block">
                 <p className="text-xs text-slate-500 leading-none">
                   {language === 'en' ? 'Dominican news portal' : 'Portal de noticias dominicano'}
                 </p>
@@ -99,9 +93,9 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-4 py-2.5 rounded-lg text-base font-semibold transition-colors ${
                     location.pathname === link.to
-                      ? 'bg-slate-900 text-white'
+                      ? 'bg-brand-blue text-white'
                       : 'text-slate-700 hover:bg-slate-100'
                   }`}
                 >
@@ -132,9 +126,9 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  className={`block px-4 py-3 rounded-lg text-base font-semibold transition-colors ${
                     location.pathname === link.to
-                      ? 'bg-slate-900 text-white'
+                      ? 'bg-brand-blue text-white'
                       : 'text-slate-700 hover:bg-slate-100'
                   }`}
                 >
@@ -144,6 +138,13 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
             </div>
           </div>
         )}
+
+        {/* Flag-color accent strip */}
+        <div className="h-1.5 flex">
+          <div className="flex-1 bg-brand-blue" />
+          <div className="flex-1 bg-white" />
+          <div className="flex-1 bg-brand-red" />
+        </div>
       </header>
 
       {/* Main content */}
@@ -151,8 +152,13 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
         {children}
       </main>
 
+      {/* Newsletter */}
+      <div className="max-w-7xl mx-auto px-4 mt-4">
+        <NewsletterSignup />
+      </div>
+
       {/* Footer */}
-      <footer className="bg-slate-900 text-slate-300 mt-12">
+      <footer className="bg-brand-blue-dark text-slate-300 mt-12">
         <div className="max-w-7xl mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
