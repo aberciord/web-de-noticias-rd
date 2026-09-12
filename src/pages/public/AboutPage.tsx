@@ -71,7 +71,7 @@ export default function AboutPage() {
         <h2 className="text-2xl font-bold text-slate-900 mt-8">Director responsable</h2>
         <p className="text-slate-700 leading-relaxed">
           Conforme a la Ley 6132 de Expresión y Difusión del Pensamiento, este medio designa como
-          director responsable a: [pendiente — nombre del director editorial].
+          director responsable a: Abercio Rafael Núñez.
         </p>
       </div>
     </div>
