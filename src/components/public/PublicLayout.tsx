@@ -200,6 +200,16 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                     {language === 'en' ? 'About us' : 'Acerca de nosotros'}
                   </Link>
                 </li>
+                <li>
+                  <Link to="/privacidad" className="text-sm text-slate-400 hover:text-white transition-colors">
+                    {language === 'en' ? 'Privacy policy' : 'Política de privacidad'}
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/terminos" className="text-sm text-slate-400 hover:text-white transition-colors">
+                    {language === 'en' ? 'Terms of use' : 'Términos de uso'}
+                  </Link>
+                </li>
                 <li><span className="text-sm text-slate-400">contacto@elpoderdelpueblord.com</span></li>
               </ul>
             </div>

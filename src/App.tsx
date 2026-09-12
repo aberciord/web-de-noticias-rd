@@ -6,6 +6,8 @@ import HomePage from '@/pages/public/HomePage';
 import CategoryPage from '@/pages/public/CategoryPage';
 import ArticlePage from '@/pages/public/ArticlePage';
 import AboutPage from '@/pages/public/AboutPage';
+import PrivacyPolicyPage from '@/pages/public/PrivacyPolicyPage';
+import TermsOfUsePage from '@/pages/public/TermsOfUsePage';
 import AdminLogin from '@/pages/admin/AdminLogin';
 import AdminLayout from '@/components/admin/AdminLayout';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
@@ -59,6 +61,8 @@ function PublicSite() {
           <Route path="/categoria/:categoria" element={<CategoryPage articles={articles} />} />
           <Route path="/articulo/:id" element={<ArticlePage articles={articles} />} />
           <Route path="/acerca" element={<AboutPage />} />
+          <Route path="/privacidad" element={<PrivacyPolicyPage />} />
+          <Route path="/terminos" element={<TermsOfUsePage />} />
         </Routes>
       </PublicLayout>
     </LanguageProvider>

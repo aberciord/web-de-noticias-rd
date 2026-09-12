@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Newspaper, Shield, FileText, Globe2 } from 'lucide-react';
 
 export default function AboutPage() {
@@ -61,7 +62,16 @@ export default function AboutPage() {
         <p className="text-slate-700 leading-relaxed">
           Respetamos la Ley 65-00 sobre Derecho de Autor de la República Dominicana. No copiamos
           texto ni fotos de terceros. Todo nuestro contenido es original y cita debidamente la
-          fuente de la información.
+          fuente de la información. Consulta nuestra{' '}
+          <Link to="/privacidad" className="text-red-600 hover:underline">política de privacidad</Link>{' '}
+          y nuestros{' '}
+          <Link to="/terminos" className="text-red-600 hover:underline">términos de uso</Link>.
+        </p>
+
+        <h2 className="text-2xl font-bold text-slate-900 mt-8">Director responsable</h2>
+        <p className="text-slate-700 leading-relaxed">
+          Conforme a la Ley 6132 de Expresión y Difusión del Pensamiento, este medio designa como
+          director responsable a: [pendiente — nombre del director editorial].
         </p>
       </div>
     </div>
