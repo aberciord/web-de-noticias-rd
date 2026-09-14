@@ -108,9 +108,11 @@ export default function HomePage({ articles }: HomePageProps) {
         <YoutubeLiveSection />
       </div>
 
-      {/* Category sections — cada una muestra articulos de UNA sola categoria */}
+      {/* Category sections — cada una muestra articulos de UNA sola categoria,
+          minimo 6 cuando el pipeline ya acumulo suficientes notas, con el
+          mas reciente (el de mayor relevancia) destacado en grande */}
       {CATEGORIAS.map((cat) => {
-        const catArticles = articles.filter((a) => a.categoria === cat.value).slice(0, 4);
+        const catArticles = articles.filter((a) => a.categoria === cat.value).slice(0, 6);
         if (catArticles.length === 0) return null;
         return (
           <CategorySection key={cat.value} categoria={cat.value} articles={catArticles} />
@@ -124,7 +126,8 @@ function CategorySection({ categoria, articles }: { categoria: Categoria; articl
   const { language } = useLanguage();
   const cat = CATEGORIAS.find((c) => c.value === categoria)!;
   const main = articles[0];
-  const side = articles.slice(1);
+  const rest = articles.slice(1);
+  const mainTitulo = language === 'en' ? main.titulo_en : main.titulo_es;
 
   return (
     <section className="mb-10">
@@ -137,13 +140,33 @@ function CategorySection({ categoria, articles }: { categoria: Categoria; articl
           {language === 'en' ? 'See more' : 'Ver más'} <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ArticleCard article={main} />
-        <div className="space-y-4">
-          {side.map((article) => (
-            <ArticleCard key={article.id} article={article} variant="horizontal" />
-          ))}
+
+      {/* El más relevante (más reciente) destacado en grande */}
+      <Link
+        to={`/articulo/${main.id}`}
+        className="group block relative rounded-2xl overflow-hidden bg-brand-blue-dark aspect-[21/9] sm:aspect-[3/1] mb-4"
+      >
+        {main.imagen_url && (
+          <img
+            src={main.imagen_url}
+            alt={mainTitulo}
+            className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-70 group-hover:scale-105 transition-all duration-500"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-brand-blue-dark via-brand-blue-dark/50 to-transparent" />
+        <div className="relative h-full flex flex-col justify-end p-5 sm:p-7">
+          <span className="text-xs text-slate-300 mb-1.5">{tiempoRelativo(main.publicado_en)}</span>
+          <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight group-hover:text-red-100 transition-colors line-clamp-2">
+            {mainTitulo}
+          </h3>
         </div>
+      </Link>
+
+      {/* Resto de la categoria, en tamaño estándar */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        {rest.map((article) => (
+          <ArticleCard key={article.id} article={article} />
+        ))}
       </div>
     </section>
   );
