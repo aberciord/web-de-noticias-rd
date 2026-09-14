@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Newspaper, Menu, X, Search, Globe } from 'lucide-react';
+import { Newspaper, Menu, X, Search, Globe, Youtube } from 'lucide-react';
 import { CATEGORIAS } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/context/LanguageContext';
+import { SOCIAL_LINKS } from '@/lib/socialLinks';
 import NewsletterSignup from '@/components/public/NewsletterSignup';
+import WeatherWidget from '@/components/public/WeatherWidget';
 import type { Banner } from '@/lib/types';
 
 interface PublicLayoutProps {
@@ -46,13 +48,25 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
           <span className="hidden sm:inline">
             {new Date().toLocaleDateString('es-DO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </span>
-          <button
-            onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
-            className="flex items-center gap-1.5 hover:text-white transition-colors font-medium"
-          >
-            <Globe className="w-3.5 h-3.5" />
-            {language === 'es' ? 'Cambiar a inglés' : 'Cambiar a español'}
-          </button>
+          <div className="flex items-center gap-3">
+            <WeatherWidget />
+            <a
+              href={SOCIAL_LINKS.youtube}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:flex items-center gap-1.5 hover:text-white transition-colors font-medium"
+            >
+              <Youtube className="w-3.5 h-3.5" />
+              {language === 'en' ? 'Follow us on YouTube' : 'Síguenos en YouTube'}
+            </a>
+            <button
+              onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
+              className="flex items-center gap-1.5 hover:text-white transition-colors font-medium"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              {language === 'es' ? 'Cambiar a inglés' : 'Cambiar a español'}
+            </button>
+          </div>
         </div>
       </div>
 
