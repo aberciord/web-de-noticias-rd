@@ -10,7 +10,7 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 interface RSSItem {
   title: string;
@@ -111,10 +111,10 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    if (!ANTHROPIC_API_KEY) {
+    if (!OPENAI_API_KEY) {
       const noKeyBody = JSON.stringify({
         ...results,
-        message: "ANTHROPIC_API_KEY no configurada. Se recolectaron items pero no se generaron artículos.",
+        message: "OPENAI_API_KEY no configurada. Se recolectaron items pero no se generaron artículos.",
       });
       await supabase.from("cron_run_log").insert({
         job_name: "news-pipeline",
@@ -158,15 +158,14 @@ ${items.map((item, i) => `[${i}] ID: ${item.id} | ${item.titulo_original} | ${it
 Responde SOLO en JSON: [{"id": "...", "indice": 0}]`;
 
         try {
-          const selectionResponse = await fetch("https://api.anthropic.com/v1/messages", {
+          const selectionResponse = await fetch("https://api.openai.com/v1/chat/completions", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-api-key": ANTHROPIC_API_KEY,
-              "anthropic-version": "2023-06-01",
+              "Authorization": `Bearer ${OPENAI_API_KEY}`,
             },
             body: JSON.stringify({
-              model: "claude-sonnet-4-20250514",
+              model: "gpt-4o",
               max_tokens: 1000,
               messages: [{ role: "user", content: selectionPrompt }],
             }),
@@ -174,7 +173,7 @@ Responde SOLO en JSON: [{"id": "...", "indice": 0}]`;
 
           if (selectionResponse.ok) {
             const selData = await selectionResponse.json();
-            const selText = selData.content?.[0]?.text ?? "";
+            const selText = selData.choices?.[0]?.message?.content ?? "";
             const jsonMatch = selText.match(/\[[\s\S]*\]/);
             if (jsonMatch) {
               const selections = JSON.parse(jsonMatch[0]) as Array<{ id: string }>;
@@ -216,23 +215,23 @@ Luego traduce la nota completa al inglés.
 Responde SOLO en JSON (sin markdown, sin texto adicional):
 {"titulo_es": "...", "cuerpo_es": "...", "titulo_en": "...", "cuerpo_en": "...", "resumen_seo": "..."}`;
 
-            const rewriteResponse = await fetch("https://api.anthropic.com/v1/messages", {
+            const rewriteResponse = await fetch("https://api.openai.com/v1/chat/completions", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                "x-api-key": ANTHROPIC_API_KEY,
-                "anthropic-version": "2023-06-01",
+                "Authorization": `Bearer ${OPENAI_API_KEY}`,
               },
               body: JSON.stringify({
-                model: "claude-sonnet-4-20250514",
+                model: "gpt-4o",
                 max_tokens: 1500,
+                response_format: { type: "json_object" },
                 messages: [{ role: "user", content: rewritePrompt }],
               }),
             });
 
             if (rewriteResponse.ok) {
               const rwData = await rewriteResponse.json();
-              const rwText = rwData.content?.[0]?.text ?? "";
+              const rwText = rwData.choices?.[0]?.message?.content ?? "";
               const jsonMatch = rwText.match(/\{[\s\S]*\}/);
 
               if (jsonMatch) {

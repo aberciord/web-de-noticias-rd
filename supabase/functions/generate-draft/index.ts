@@ -10,7 +10,7 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 interface GenerateDraftRequest {
   input_text: string;
@@ -34,9 +34,9 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (!ANTHROPIC_API_KEY) {
+    if (!OPENAI_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "ANTHROPIC_API_KEY no configurada" }),
+        JSON.stringify({ error: "OPENAI_API_KEY no configurada" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -52,16 +52,16 @@ Luego traduce la nota completa al inglés.
 Responde SOLO en JSON (sin markdown, sin texto adicional):
 {"titulo_es": "...", "cuerpo_es": "...", "titulo_en": "...", "cuerpo_en": "...", "resumen_seo": "..."}`;
 
-    const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
+    const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "gpt-4o",
         max_tokens: 1500,
+        response_format: { type: "json_object" },
         messages: [
           {
             role: "user",
@@ -71,16 +71,16 @@ Responde SOLO en JSON (sin markdown, sin texto adicional):
       }),
     });
 
-    if (!anthropicResponse.ok) {
-      const errText = await anthropicResponse.text();
+    if (!openaiResponse.ok) {
+      const errText = await openaiResponse.text();
       return new Response(
-        JSON.stringify({ error: `Error de la API de Claude: ${anthropicResponse.status}`, details: errText }),
+        JSON.stringify({ error: `Error de la API de OpenAI: ${openaiResponse.status}`, details: errText }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const anthropicData = await anthropicResponse.json();
-    const textContent = anthropicData.content?.[0]?.text ?? "";
+    const openaiData = await openaiResponse.json();
+    const textContent = openaiData.choices?.[0]?.message?.content ?? "";
 
     let generatedArticle;
     try {
