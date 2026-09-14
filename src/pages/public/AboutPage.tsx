@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Newspaper, Shield, FileText, Globe2 } from 'lucide-react';
+import { Newspaper, Shield, FileText, Globe2, Mail, MessageCircle } from 'lucide-react';
+import { SOCIAL_LINKS } from '@/lib/socialLinks';
 
 export default function AboutPage() {
   return (
@@ -71,8 +72,24 @@ export default function AboutPage() {
         <h2 className="text-2xl font-bold text-slate-900 mt-8">Director responsable</h2>
         <p className="text-slate-700 leading-relaxed">
           Conforme a la Ley 6132 de Expresión y Difusión del Pensamiento, este medio designa como
-          director responsable a: Abercio Rafael Núñez.
+          director responsable y director técnico a: Abercio Rafael Núñez.
         </p>
+
+        <h2 className="text-2xl font-bold text-slate-900 mt-8">Contacto</h2>
+        <ul className="space-y-2 not-prose">
+          <li>
+            <a href={`mailto:${SOCIAL_LINKS.email}`} className="flex items-center gap-2 text-slate-700 hover:text-red-600 transition-colors">
+              <Mail className="w-4 h-4" />
+              {SOCIAL_LINKS.email}
+            </a>
+          </li>
+          <li>
+            <a href={SOCIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-slate-700 hover:text-red-600 transition-colors">
+              <MessageCircle className="w-4 h-4" />
+              WhatsApp: {SOCIAL_LINKS.whatsappDisplay}
+            </a>
+          </li>
+        </ul>
       </div>
     </div>
   );

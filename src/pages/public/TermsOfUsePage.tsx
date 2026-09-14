@@ -55,8 +55,8 @@ export default function TermsOfUsePage() {
         <h2 className="text-xl font-bold text-slate-900 mt-8">Contacto</h2>
         <p className="text-slate-700 leading-relaxed">
           Preguntas sobre estos términos:{' '}
-          <a href="mailto:contacto@elpoderdelpueblord.com" className="text-red-600 hover:underline">
-            contacto@elpoderdelpueblord.com
+          <a href="mailto:elpoderdelpueblord@gmail.com" className="text-red-600 hover:underline">
+            elpoderdelpueblord@gmail.com
           </a>.
         </p>
       </div>

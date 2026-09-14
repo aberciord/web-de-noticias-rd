@@ -43,8 +43,8 @@ export default function PrivacyPolicyPage() {
         <p className="text-slate-700 leading-relaxed">
           Puedes solicitar acceso, corrección, cancelación o eliminación de tus datos personales (incluyendo tu
           cuenta, tus comentarios o tu suscripción al boletín) escribiéndonos a{' '}
-          <a href="mailto:contacto@elpoderdelpueblord.com" className="text-red-600 hover:underline">
-            contacto@elpoderdelpueblord.com
+          <a href="mailto:elpoderdelpueblord@gmail.com" className="text-red-600 hover:underline">
+            elpoderdelpueblord@gmail.com
           </a>. Atenderemos tu solicitud dentro de un plazo razonable.
         </p>
 
@@ -62,8 +62,8 @@ export default function PrivacyPolicyPage() {
         <h2 className="text-xl font-bold text-slate-900 mt-8">Contacto</h2>
         <p className="text-slate-700 leading-relaxed">
           Si tienes preguntas sobre esta política, escríbenos a{' '}
-          <a href="mailto:contacto@elpoderdelpueblord.com" className="text-red-600 hover:underline">
-            contacto@elpoderdelpueblord.com
+          <a href="mailto:elpoderdelpueblord@gmail.com" className="text-red-600 hover:underline">
+            elpoderdelpueblord@gmail.com
           </a>.
         </p>
       </div>

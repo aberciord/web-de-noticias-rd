@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Newspaper, Menu, X, Search, Globe, Youtube } from 'lucide-react';
+import { Newspaper, Menu, X, Search, Globe, Youtube, Instagram, MessageCircle, Mail } from 'lucide-react';
 import { CATEGORIAS } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/context/LanguageContext';
@@ -50,15 +50,26 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
           </span>
           <div className="flex items-center gap-3">
             <WeatherWidget />
-            <a
-              href={SOCIAL_LINKS.youtube}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-1.5 hover:text-white transition-colors font-medium"
-            >
-              <Youtube className="w-3.5 h-3.5" />
-              {language === 'en' ? 'Follow us on YouTube' : 'Síguenos en YouTube'}
-            </a>
+            <div className="hidden sm:flex items-center gap-2">
+              <a
+                href={SOCIAL_LINKS.youtube}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={language === 'en' ? 'Follow us on YouTube' : 'Síguenos en YouTube'}
+                className="hover:text-white transition-colors"
+              >
+                <Youtube className="w-4 h-4" />
+              </a>
+              <a
+                href={SOCIAL_LINKS.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={language === 'en' ? 'Follow us on Instagram' : 'Síguenos en Instagram'}
+                className="hover:text-white transition-colors"
+              >
+                <Instagram className="w-4 h-4" />
+              </a>
+            </div>
             <button
               onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
               className="flex items-center gap-1.5 hover:text-white transition-colors font-medium"
@@ -189,6 +200,35 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                   ? 'News portal of the Dominican Republic. Up-to-date information on news, sports, politics, and entertainment. Original content generated respecting copyright under Law 65-00.'
                   : 'Portal de noticias de la República Dominicana. Información actualizada sobre noticias, deportes, política y farándula. Contenido original generado respetando el derecho de autor conforme a la Ley 65-00.'}
               </p>
+              <div className="flex items-center gap-3 mt-4">
+                <a
+                  href={SOCIAL_LINKS.youtube}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="YouTube"
+                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                >
+                  <Youtube className="w-4 h-4" />
+                </a>
+                <a
+                  href={SOCIAL_LINKS.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Instagram"
+                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                >
+                  <Instagram className="w-4 h-4" />
+                </a>
+                <a
+                  href={SOCIAL_LINKS.whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="WhatsApp"
+                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                </a>
+              </div>
             </div>
             <div>
               <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">
@@ -224,7 +264,18 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                     {language === 'en' ? 'Terms of use' : 'Términos de uso'}
                   </Link>
                 </li>
-                <li><span className="text-sm text-slate-400">contacto@elpoderdelpueblord.com</span></li>
+                <li>
+                  <a href={`mailto:${SOCIAL_LINKS.email}`} className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors">
+                    <Mail className="w-3.5 h-3.5" />
+                    {SOCIAL_LINKS.email}
+                  </a>
+                </li>
+                <li>
+                  <a href={SOCIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors">
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    {SOCIAL_LINKS.whatsappDisplay}
+                  </a>
+                </li>
               </ul>
             </div>
           </div>
