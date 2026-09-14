@@ -160,22 +160,22 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
             ))}
           </div>
 
-          {/* Source citation */}
+          {/* Source citation — siempre al final del cuerpo, en letra pequeña */}
           {article.fuente_nombre && (
-            <div className="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-lg flex items-center gap-2">
-              <span className="text-sm font-medium text-slate-600">{fuenteLabel}:</span>
+            <div className="mt-6 pt-3 border-t border-slate-200 flex items-center gap-1.5">
+              <span className="text-xs text-slate-500">{fuenteLabel}:</span>
               {article.fuente_url ? (
                 <a
                   href={article.fuente_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm font-semibold text-red-600 hover:underline flex items-center gap-1"
+                  className="text-xs font-medium text-red-600 hover:underline flex items-center gap-1"
                 >
                   {article.fuente_nombre}
                   <ExternalLink className="w-3 h-3" />
                 </a>
               ) : (
-                <span className="text-sm font-semibold text-slate-700">{article.fuente_nombre}</span>
+                <span className="text-xs font-medium text-slate-600">{article.fuente_nombre}</span>
               )}
             </div>
           )}

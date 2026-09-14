@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Newspaper, Menu, X, Search, Globe, Youtube, Instagram, MessageCircle, Mail } from 'lucide-react';
+import { Menu, X, Search, Globe, Youtube, Instagram, MessageCircle, Mail } from 'lucide-react';
 import { CATEGORIAS } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/context/LanguageContext';
@@ -187,10 +187,8 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
         <div className="max-w-7xl mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                  <Newspaper className="w-5 h-5 text-slate-900" />
-                </div>
+              <div className="flex items-center gap-3 mb-4">
+                <img src="/logo.png" alt="El poder del pueblo RD" className="h-12 w-12 rounded-lg bg-white object-contain p-1" />
                 <span className="font-heading text-xl font-bold text-white">
                   El poder del pueblo <span className="text-red-500">RD</span>
                 </span>
