@@ -56,7 +56,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 title={language === 'en' ? 'Follow us on YouTube' : 'Síguenos en YouTube'}
-                className="hover:text-white transition-colors"
+                className="w-7 h-7 flex items-center justify-center rounded-full bg-red-600 text-white hover:bg-red-500 hover:scale-110 transition-all"
               >
                 <Youtube className="w-4 h-4" />
               </a>
@@ -65,7 +65,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 title={language === 'en' ? 'Follow us on Instagram' : 'Síguenos en Instagram'}
-                className="hover:text-white transition-colors"
+                className="w-7 h-7 flex items-center justify-center rounded-full bg-gradient-to-tr from-amber-400 via-pink-600 to-purple-600 text-white hover:scale-110 transition-transform"
               >
                 <Instagram className="w-4 h-4" />
               </a>
@@ -81,15 +81,15 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
         </div>
       </div>
 
-      {/* Header banner */}
+      {/* Header banner — espacio reservado para publicidad contratada */}
       {headerBanner && (
-        <div className="bg-slate-50 border-b border-slate-200">
-          <div className="max-w-7xl mx-auto px-4 py-2">
+        <div className="bg-slate-100 border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 py-3">
             <a href={headerBanner.link ?? '#'} target="_blank" rel="noopener noreferrer">
               <img
                 src={headerBanner.imagen_url}
                 alt={headerBanner.titulo ?? 'Banner publicitario'}
-                className="w-full h-20 sm:h-24 object-cover rounded-lg"
+                className="w-full h-32 sm:h-44 lg:h-52 object-contain rounded-lg bg-white"
               />
             </a>
           </div>

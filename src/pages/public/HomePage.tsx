@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { CATEGORIAS } from '@/lib/types';
 import type { Article, Categoria } from '@/lib/types';
 import ArticleCard from '@/components/public/ArticleCard';
+import YoutubeLiveSection from '@/components/public/YoutubeLiveSection';
 import { tiempoRelativo } from '@/lib/format';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -13,8 +14,11 @@ interface HomePageProps {
 export default function HomePage({ articles }: HomePageProps) {
   const { language } = useLanguage();
   const featured = articles[0];
-  const secondary = articles.slice(1, 3);
-  const rest = articles.slice(3);
+  // "Lo más reciente" solo muestra artículos de la MISMA categoría que el
+  // destacado — nunca mezclamos categorías dentro de un mismo renglón.
+  const secondary = featured
+    ? articles.filter((a) => a.categoria === featured.categoria && a.id !== featured.id).slice(0, 2)
+    : [];
 
   if (!featured) {
     return (
@@ -85,7 +89,7 @@ export default function HomePage({ articles }: HomePageProps) {
       </section>
 
       {/* Category navigation */}
-      <div className="flex flex-wrap gap-2 mb-6 border-b border-slate-200 pb-4">
+      <div className="flex flex-wrap gap-2 mb-8 border-b border-slate-200 pb-4">
         <span className="text-sm font-semibold text-slate-500 py-1.5">
           {language === 'en' ? 'Explore:' : 'Explorar:'}
         </span>
@@ -100,21 +104,11 @@ export default function HomePage({ articles }: HomePageProps) {
         ))}
       </div>
 
-      {/* Articles grid */}
-      <section className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-slate-900">
-            {language === 'en' ? 'More news' : 'Más noticias'}
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {rest.map((article) => (
-            <ArticleCard key={article.id} article={article} />
-          ))}
-        </div>
-      </section>
+      <div className="mb-10">
+        <YoutubeLiveSection />
+      </div>
 
-      {/* Category sections */}
+      {/* Category sections — cada una muestra articulos de UNA sola categoria */}
       {CATEGORIAS.map((cat) => {
         const catArticles = articles.filter((a) => a.categoria === cat.value).slice(0, 4);
         if (catArticles.length === 0) return null;
