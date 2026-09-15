@@ -4,8 +4,8 @@
 export const SOCIAL_LINKS = {
   youtube: 'https://www.youtube.com/@elpoderdelpueblordoficial',
   instagram: 'https://www.instagram.com/poderdelpueblord/',
-  facebook: '',
-  x: '',
+  facebook: 'https://facebook.com/elpoderdelpueblord',
+  x: 'https://x.com/elpoderpueblord',
   email: 'elpoderdelpueblord@gmail.com',
   whatsapp: 'https://wa.me/18495393001',
   whatsappDisplay: '+1 849-539-3001',

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Search, Globe, Youtube, Instagram, MessageCircle, Mail } from 'lucide-react';
+import { Menu, X, Search, Globe, Youtube, Instagram, Facebook, X as XIcon, MessageCircle, Mail } from 'lucide-react';
 import { CATEGORIAS } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/context/LanguageContext';
@@ -106,6 +106,24 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                 className="w-7 h-7 flex items-center justify-center rounded-full bg-gradient-to-tr from-amber-400 via-pink-600 to-purple-600 text-white hover:scale-110 transition-transform"
               >
                 <Instagram className="w-4 h-4" />
+              </a>
+              <a
+                href={SOCIAL_LINKS.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={language === 'en' ? 'Follow us on Facebook' : 'Síguenos en Facebook'}
+                className="w-7 h-7 flex items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-500 hover:scale-110 transition-all"
+              >
+                <Facebook className="w-4 h-4" />
+              </a>
+              <a
+                href={SOCIAL_LINKS.x}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={language === 'en' ? 'Follow us on X' : 'Síguenos en X'}
+                className="w-7 h-7 flex items-center justify-center rounded-full bg-slate-950 text-white hover:bg-slate-800 hover:scale-110 transition-all"
+              >
+                <XIcon className="w-3.5 h-3.5" />
               </a>
             </div>
             <button
@@ -265,6 +283,24 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                   className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
                 >
                   <Instagram className="w-4 h-4" />
+                </a>
+                <a
+                  href={SOCIAL_LINKS.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Facebook"
+                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                >
+                  <Facebook className="w-4 h-4" />
+                </a>
+                <a
+                  href={SOCIAL_LINKS.x}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="X"
+                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                >
+                  <XIcon className="w-4 h-4" />
                 </a>
                 <a
                   href={SOCIAL_LINKS.whatsapp}
