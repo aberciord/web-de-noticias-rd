@@ -9,6 +9,7 @@ import AboutPage from '@/pages/public/AboutPage';
 import PrivacyPolicyPage from '@/pages/public/PrivacyPolicyPage';
 import TermsOfUsePage from '@/pages/public/TermsOfUsePage';
 import AdminLogin from '@/pages/admin/AdminLogin';
+import ResetPasswordPage from '@/pages/admin/ResetPasswordPage';
 import AdminLayout from '@/components/admin/AdminLayout';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import ReviewQueue from '@/pages/admin/ReviewQueue';
@@ -76,6 +77,7 @@ function App() {
         <Routes>
           {/* Admin login */}
           <Route path="/admin" element={<AdminLogin />} />
+          <Route path="/admin/restablecer" element={<ResetPasswordPage />} />
 
           {/* Admin panel */}
           <Route
