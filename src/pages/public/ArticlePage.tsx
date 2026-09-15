@@ -147,7 +147,7 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
           {midBanner && (
             <div className="my-6 rounded-lg overflow-hidden">
               <a href={midBanner.link ?? '#'} target="_blank" rel="noopener noreferrer">
-                <img src={midBanner.imagen_url} alt={midBanner.titulo ?? 'Publicidad'} className="w-full object-cover" />
+                <img src={midBanner.imagen_url} alt={midBanner.titulo ?? 'Publicidad'} className="w-full h-40 sm:h-56 object-cover" />
               </a>
             </div>
           )}

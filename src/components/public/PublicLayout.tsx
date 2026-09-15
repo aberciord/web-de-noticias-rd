@@ -16,23 +16,61 @@ interface PublicLayoutProps {
 export default function PublicLayout({ children }: PublicLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [headerBanner, setHeaderBanner] = useState<Banner | null>(null);
+  const [footerBanner, setFooterBanner] = useState<Banner | null>(null);
   const { language, setLanguage } = useLanguage();
   const location = useLocation();
+
+  const categoriaActual = location.pathname.match(/^\/categoria\/([a-z]+)/)?.[1] ?? null;
 
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
+    const loadHeaderBanner = async () => {
+      if (categoriaActual) {
+        const { data: propio } = await supabase
+          .from('banners')
+          .select('*')
+          .eq('posicion', 'header')
+          .eq('activo', true)
+          .eq('categoria', categoriaActual)
+          .order('creado_en', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (propio) {
+          setHeaderBanner(propio as Banner);
+          return;
+        }
+      }
+
+      const { data: general } = await supabase
+        .from('banners')
+        .select('*')
+        .eq('posicion', 'header')
+        .eq('activo', true)
+        .is('categoria', null)
+        .order('creado_en', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      setHeaderBanner(general as Banner | null);
+    };
+
+    loadHeaderBanner();
+  }, [categoriaActual]);
+
+  useEffect(() => {
     supabase
       .from('banners')
       .select('*')
-      .eq('posicion', 'header')
+      .eq('posicion', 'footer')
       .eq('activo', true)
       .order('creado_en', { ascending: false })
       .limit(1)
       .maybeSingle()
-      .then(({ data }) => setHeaderBanner(data as Banner | null));
+      .then(({ data }) => setFooterBanner(data as Banner | null));
   }, []);
 
   const navLinks = [
@@ -184,6 +222,17 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
 
       {/* Footer */}
       <footer className="bg-brand-blue-dark text-slate-300 mt-12">
+        {footerBanner && (
+          <div className="max-w-7xl mx-auto px-4 pt-8">
+            <a href={footerBanner.link ?? '#'} target="_blank" rel="noopener noreferrer">
+              <img
+                src={footerBanner.imagen_url}
+                alt={footerBanner.titulo ?? 'Banner publicitario'}
+                className="w-full h-24 sm:h-32 object-contain rounded-lg bg-white"
+              />
+            </a>
+          </div>
+        )}
         <div className="max-w-7xl mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-2">

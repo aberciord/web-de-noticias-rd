@@ -52,6 +52,7 @@ export interface Article {
 export interface Banner {
   id: string;
   posicion: PosicionBanner;
+  categoria: Categoria | null;
   titulo: string | null;
   imagen_url: string;
   link: string | null;

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Image, Plus, Trash2, Edit3, X, Check, Power } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import type { Banner, PosicionBanner } from '@/lib/types';
+import { CATEGORIAS } from '@/lib/types';
+import type { Banner, PosicionBanner, Categoria } from '@/lib/types';
 
 const POSICIONES: { value: PosicionBanner; label: string }[] = [
   { value: 'header', label: 'Encabezado' },
@@ -10,12 +11,52 @@ const POSICIONES: { value: PosicionBanner; label: string }[] = [
   { value: 'footer', label: 'Pie de página' },
 ];
 
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024; // 2MB
+
+async function validateBannerImage(url: string): Promise<string | null> {
+  const ext = url.split('?')[0].split('.').pop()?.toLowerCase();
+  if (!ext || !ALLOWED_EXTENSIONS.includes(ext)) {
+    return 'La URL debe apuntar a una imagen JPG, PNG o WebP (revisa la extensión del archivo).';
+  }
+
+  try {
+    const res = await fetch(url, { method: 'HEAD' });
+    const contentType = res.headers.get('content-type')?.toLowerCase().split(';')[0];
+    const contentLength = res.headers.get('content-length');
+
+    if (contentType && !ALLOWED_IMAGE_TYPES.includes(contentType)) {
+      return `Formato no permitido (${contentType}). Usa JPG, PNG o WebP.`;
+    }
+    if (contentLength && Number(contentLength) > MAX_IMAGE_BYTES) {
+      return `La imagen pesa ${(Number(contentLength) / 1024 / 1024).toFixed(1)}MB — el máximo permitido es 2MB.`;
+    }
+  } catch {
+    // El servidor de la imagen no permite verificar tipo/peso desde el navegador
+    // (CORS). La extensión ya se validó arriba, así que se deja pasar.
+  }
+
+  return null;
+}
+
+interface BannerForm {
+  posicion: PosicionBanner;
+  categoria: Categoria | '';
+  titulo: string;
+  imagen_url: string;
+  link: string;
+  activo: boolean;
+}
+
+const EMPTY_FORM: BannerForm = { posicion: 'header', categoria: '', titulo: '', imagen_url: '', link: '', activo: true };
+
 export default function BannersManager() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Banner | null>(null);
-  const [form, setForm] = useState({ posicion: 'header' as PosicionBanner, titulo: '', imagen_url: '', link: '', activo: true });
+  const [form, setForm] = useState<BannerForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,7 +76,7 @@ export default function BannersManager() {
   };
 
   const resetForm = () => {
-    setForm({ posicion: 'header', titulo: '', imagen_url: '', link: '', activo: true });
+    setForm(EMPTY_FORM);
     setEditing(null);
     setShowForm(false);
     setError(null);
@@ -46,11 +87,20 @@ export default function BannersManager() {
     setSaving(true);
     setError(null);
 
+    const imageError = await validateBannerImage(form.imagen_url);
+    if (imageError) {
+      setError(imageError);
+      setSaving(false);
+      return;
+    }
+
+    const payload = { ...form, categoria: form.categoria || null };
+
     if (editing) {
-      const { error } = await supabase.from('banners').update(form).eq('id', editing.id);
+      const { error } = await supabase.from('banners').update(payload).eq('id', editing.id);
       if (error) { setError(error.message); setSaving(false); return; }
     } else {
-      const { error } = await supabase.from('banners').insert(form);
+      const { error } = await supabase.from('banners').insert(payload);
       if (error) { setError(error.message); setSaving(false); return; }
     }
 
@@ -72,7 +122,14 @@ export default function BannersManager() {
 
   const startEdit = (banner: Banner) => {
     setEditing(banner);
-    setForm({ posicion: banner.posicion, titulo: banner.titulo ?? '', imagen_url: banner.imagen_url, link: banner.link ?? '', activo: banner.activo });
+    setForm({
+      posicion: banner.posicion,
+      categoria: banner.categoria ?? '',
+      titulo: banner.titulo ?? '',
+      imagen_url: banner.imagen_url,
+      link: banner.link ?? '',
+      activo: banner.activo,
+    });
     setShowForm(true);
   };
 
@@ -114,6 +171,23 @@ export default function BannersManager() {
               </select>
             </div>
             <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Categoría</label>
+              <select
+                value={form.categoria}
+                onChange={(e) => setForm({ ...form, categoria: e.target.value as Categoria | '' })}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none bg-white"
+              >
+                <option value="">Todas (portada / general)</option>
+                {CATEGORIAS.map((c) => (
+                  <option key={c.value} value={c.value}>Solo {c.label}</option>
+                ))}
+              </select>
+              <p className="text-xs text-slate-400 mt-1">
+                Si eliges una categoría, este banner de encabezado solo se muestra en esa página; las demás
+                siguen usando el banner "Todas".
+              </p>
+            </div>
+            <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Título (opcional)</label>
               <input
                 type="text"
@@ -124,7 +198,9 @@ export default function BannersManager() {
               />
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">URL de la imagen</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                URL de la imagen <span className="text-slate-400 font-normal">(JPG, PNG o WebP, máx. 2MB)</span>
+              </label>
               <input
                 type="url"
                 required
@@ -166,7 +242,7 @@ export default function BannersManager() {
                 className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-50"
               >
                 <Check className="w-4 h-4" />
-                {saving ? 'Guardando...' : 'Guardar'}
+                {saving ? 'Verificando y guardando...' : 'Guardar'}
               </button>
               <button
                 type="button"
@@ -196,13 +272,18 @@ export default function BannersManager() {
                 banner.activo ? 'border-slate-200' : 'border-slate-200 opacity-60'
               }`}
             >
-              <div className="flex items-start justify-between mb-3">
-                <span className="text-xs font-semibold text-white bg-slate-700 px-2.5 py-1 rounded-full">
-                  {POSICIONES.find((p) => p.value === banner.posicion)?.label}
-                </span>
+              <div className="flex items-start justify-between mb-3 gap-2">
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="text-xs font-semibold text-white bg-slate-700 px-2.5 py-1 rounded-full">
+                    {POSICIONES.find((p) => p.value === banner.posicion)?.label}
+                  </span>
+                  <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full">
+                    {banner.categoria ? CATEGORIAS.find((c) => c.value === banner.categoria)?.label : 'Todas'}
+                  </span>
+                </div>
                 <button
                   onClick={() => toggleActive(banner)}
-                  className={`p-1.5 rounded-lg transition-colors ${banner.activo ? 'text-emerald-600 hover:bg-emerald-50' : 'text-slate-400 hover:bg-slate-100'}`}
+                  className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${banner.activo ? 'text-emerald-600 hover:bg-emerald-50' : 'text-slate-400 hover:bg-slate-100'}`}
                 >
                   <Power className="w-4 h-4" />
                 </button>
