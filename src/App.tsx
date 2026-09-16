@@ -9,7 +9,6 @@ import AboutPage from '@/pages/public/AboutPage';
 import PrivacyPolicyPage from '@/pages/public/PrivacyPolicyPage';
 import TermsOfUsePage from '@/pages/public/TermsOfUsePage';
 import AdminLogin from '@/pages/admin/AdminLogin';
-import ResetPasswordPage from '@/pages/admin/ResetPasswordPage';
 import AdminLayout from '@/components/admin/AdminLayout';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import ReviewQueue from '@/pages/admin/ReviewQueue';
@@ -17,6 +16,7 @@ import ArticleEditor from '@/pages/admin/ArticleEditor';
 import SourcesManager from '@/pages/admin/SourcesManager';
 import BannersManager from '@/pages/admin/BannersManager';
 import CommentsManager from '@/pages/admin/CommentsManager';
+import EditorsManager from '@/pages/admin/EditorsManager';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Article } from '@/lib/types';
@@ -77,7 +77,6 @@ function App() {
         <Routes>
           {/* Admin login */}
           <Route path="/admin" element={<AdminLogin />} />
-          <Route path="/admin/restablecer" element={<ResetPasswordPage />} />
 
           {/* Admin panel */}
           <Route
@@ -93,6 +92,7 @@ function App() {
                     <Route path="fuentes" element={<SourcesManager />} />
                     <Route path="banners" element={<BannersManager />} />
                     <Route path="comentarios" element={<CommentsManager />} />
+                    <Route path="editores" element={<EditorsManager />} />
                     <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
                   </Routes>
                 </AdminLayout>

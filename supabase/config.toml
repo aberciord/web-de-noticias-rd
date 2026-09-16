@@ -6,3 +6,9 @@ verify_jwt = false
 
 [functions.search-images]
 verify_jwt = true
+
+[functions.manage-editors]
+verify_jwt = true
+
+[functions.reset-password-questions]
+verify_jwt = false
