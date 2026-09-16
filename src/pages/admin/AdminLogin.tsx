@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -7,9 +7,15 @@ import { supabase } from '@/lib/supabase';
 type Mode = 'signin' | 'forgot_email' | 'forgot_questions' | 'forgot_done';
 
 export default function AdminLogin() {
-  const { signIn } = useAuth();
+  const { signIn, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>('signin');
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate('/admin/dashboard');
+    }
+  }, [authLoading, user, navigate]);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
