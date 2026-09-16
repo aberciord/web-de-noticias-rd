@@ -28,6 +28,7 @@ interface SetOwnQuestionsRequest {
   answer_1: string;
   question_2: string;
   answer_2: string;
+  new_password?: string;
 }
 
 Deno.serve(async (req: Request) => {
@@ -75,6 +76,13 @@ Deno.serve(async (req: Request) => {
         );
       }
 
+      if (body.new_password && body.new_password.length < 6) {
+        return new Response(
+          JSON.stringify({ error: "La contraseña nueva necesita al menos 6 caracteres" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       const { error: ownQuestionsError } = await adminClient.rpc("set_editor_security_questions", {
         p_editor_id: userData.user.id,
         p_question_1: body.question_1.trim(),
@@ -88,6 +96,18 @@ Deno.serve(async (req: Request) => {
           JSON.stringify({ error: ownQuestionsError.message }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
+      }
+
+      if (body.new_password) {
+        const { error: passwordError } = await adminClient.auth.admin.updateUserById(userData.user.id, {
+          password: body.new_password,
+        });
+        if (passwordError) {
+          return new Response(
+            JSON.stringify({ error: passwordError.message }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
       }
 
       return new Response(
