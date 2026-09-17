@@ -102,7 +102,7 @@ export default function ArticleEditor() {
       return;
     }
 
-    navigate('/admin/revision');
+    navigate('/panel-8f3k2qx9/revision');
   };
 
   const handleGenerateDraft = async () => {
@@ -197,7 +197,7 @@ export default function ArticleEditor() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Link to="/admin/revision" className="p-2 rounded-lg hover:bg-slate-100 transition-colors">
+          <Link to="/panel-8f3k2qx9/revision" className="p-2 rounded-lg hover:bg-slate-100 transition-colors">
             <ArrowLeft className="w-5 h-5 text-slate-600" />
           </Link>
           <div>

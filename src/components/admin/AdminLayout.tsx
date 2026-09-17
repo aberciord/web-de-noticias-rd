@@ -7,13 +7,13 @@ interface AdminLayoutProps {
 }
 
 const navItems = [
-  { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/admin/revision', label: 'Cola de revisión', icon: FileEdit },
-  { to: '/admin/crear', label: 'Nueva nota', icon: PlusCircle },
-  { to: '/admin/fuentes', label: 'Fuentes RSS', icon: Rss },
-  { to: '/admin/banners', label: 'Banners', icon: Image },
-  { to: '/admin/comentarios', label: 'Comentarios', icon: MessageCircle },
-  { to: '/admin/editores', label: 'Editores', icon: Users },
+  { to: '/panel-8f3k2qx9/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/panel-8f3k2qx9/revision', label: 'Cola de revisión', icon: FileEdit },
+  { to: '/panel-8f3k2qx9/crear', label: 'Nueva nota', icon: PlusCircle },
+  { to: '/panel-8f3k2qx9/fuentes', label: 'Fuentes RSS', icon: Rss },
+  { to: '/panel-8f3k2qx9/banners', label: 'Banners', icon: Image },
+  { to: '/panel-8f3k2qx9/comentarios', label: 'Comentarios', icon: MessageCircle },
+  { to: '/panel-8f3k2qx9/editores', label: 'Editores', icon: Users },
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
@@ -22,7 +22,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/admin');
+    navigate('/panel-8f3k2qx9');
   };
 
   return (

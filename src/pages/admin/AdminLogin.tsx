@@ -13,7 +13,7 @@ export default function AdminLogin() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      navigate('/admin/dashboard');
+      navigate('/panel-8f3k2qx9/dashboard');
     }
   }, [authLoading, user, navigate]);
 
@@ -52,7 +52,7 @@ export default function AdminLogin() {
     if (result.error) {
       setError(result.error);
     } else {
-      navigate('/admin/dashboard');
+      navigate('/panel-8f3k2qx9/dashboard');
     }
   };
 

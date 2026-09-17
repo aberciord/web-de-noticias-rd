@@ -24,7 +24,7 @@ import type { Article } from '@/lib/types';
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center text-slate-400">Cargando...</div>;
-  if (!user) return <Navigate to="/admin" replace />;
+  if (!user) return <Navigate to="/panel-8f3k2qx9" replace />;
   return <>{children}</>;
 }
 
@@ -76,11 +76,11 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Admin login */}
-          <Route path="/admin" element={<AdminLogin />} />
+          <Route path="/panel-8f3k2qx9" element={<AdminLogin />} />
 
           {/* Admin panel */}
           <Route
-            path="/admin/*"
+            path="/panel-8f3k2qx9/*"
             element={
               <ProtectedRoute>
                 <AdminLayout>
@@ -93,7 +93,7 @@ function App() {
                     <Route path="banners" element={<BannersManager />} />
                     <Route path="comentarios" element={<CommentsManager />} />
                     <Route path="editores" element={<EditorsManager />} />
-                    <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+                    <Route path="*" element={<Navigate to="/panel-8f3k2qx9/dashboard" replace />} />
                   </Routes>
                 </AdminLayout>
               </ProtectedRoute>

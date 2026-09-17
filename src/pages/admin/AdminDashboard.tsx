@@ -72,7 +72,7 @@ export default function AdminDashboard() {
           <p className="text-slate-500 text-sm mt-1">Resumen general del contenido editorial</p>
         </div>
         <Link
-          to="/admin/revision"
+          to="/panel-8f3k2qx9/revision"
           className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors"
         >
           <FileEdit className="w-4 h-4" />
@@ -98,7 +98,7 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-bold text-slate-900">Cola de revisión</h2>
-            <Link to="/admin/revision" className="text-sm text-red-600 hover:underline flex items-center gap-1">
+            <Link to="/panel-8f3k2qx9/revision" className="text-sm text-red-600 hover:underline flex items-center gap-1">
               Ver todas <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
@@ -109,7 +109,7 @@ export default function AdminDashboard() {
               {recentPending.map((article) => (
                 <Link
                   key={article.id}
-                  to={`/admin/editar/${article.id}`}
+                  to={`/panel-8f3k2qx9/editar/${article.id}`}
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors group"
                 >
                   {article.imagen_url && (

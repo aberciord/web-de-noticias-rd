@@ -131,7 +131,7 @@ export default function ReviewQueue() {
                     </span>
                     <span className="text-xs text-slate-400">por {article.autor}</span>
                   </div>
-                  <Link to={`/admin/editar/${article.id}`}>
+                  <Link to={`/panel-8f3k2qx9/editar/${article.id}`}>
                     <h3 className="font-bold text-slate-900 hover:text-red-600 transition-colors line-clamp-2 leading-snug">
                       {article.titulo_es}
                     </h3>
@@ -173,7 +173,7 @@ export default function ReviewQueue() {
                         </button>
                       )}
                       <Link
-                        to={`/admin/editar/${article.id}`}
+                        to={`/panel-8f3k2qx9/editar/${article.id}`}
                         className="text-xs font-medium text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors border border-slate-200"
                       >
                         Editar
