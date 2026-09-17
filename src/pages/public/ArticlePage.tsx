@@ -28,6 +28,25 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
       : 'El poder del pueblo RD',
     description: article?.resumen_seo ?? undefined,
     image: article?.imagen_url ?? undefined,
+    canonical: article ? `https://elpoderdelpueblord.com/articulo/${article.id}` : undefined,
+    jsonLd: article
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'NewsArticle',
+          headline: language === 'es' ? article.titulo_es : article.titulo_en,
+          description: article.resumen_seo ?? undefined,
+          image: article.imagen_url ?? undefined,
+          datePublished: article.publicado_en ?? undefined,
+          author: { '@type': 'Organization', name: 'El poder del pueblo RD' },
+          publisher: {
+            '@type': 'Organization',
+            name: 'El poder del pueblo RD',
+            logo: { '@type': 'ImageObject', url: 'https://elpoderdelpueblord.com/logo.png' },
+          },
+          mainEntityOfPage: `https://elpoderdelpueblord.com/articulo/${article.id}`,
+          articleSection: getCategoriaLabel(article.categoria, 'es'),
+        }
+      : undefined,
   });
 
   useEffect(() => {

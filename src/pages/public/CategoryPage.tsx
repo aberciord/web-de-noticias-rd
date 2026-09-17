@@ -27,6 +27,7 @@ export default function CategoryPage({ articles }: CategoryPageProps) {
     title: cat
       ? `${language === 'en' ? cat.labelEn : cat.label} — El poder del pueblo RD`
       : 'El poder del pueblo RD',
+    canonical: categoria ? `https://elpoderdelpueblord.com/categoria/${categoria}` : undefined,
   });
 
   if (!cat) {
