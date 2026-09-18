@@ -372,6 +372,16 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                 : 'Las notas publicadas citan su fuente original con enlace.'}
             </p>
           </div>
+          <div className="mt-4 flex justify-center">
+            <a
+              href="https://wa.me/18494473001"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-slate-500 hover:text-white transition-colors"
+            >
+              Desarrollado por MR. NUÑEZ DESIGN
+            </a>
+          </div>
         </div>
       </footer>
     </div>
