@@ -16,6 +16,7 @@ interface PublicLayoutProps {
 export default function PublicLayout({ children }: PublicLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [headerBanner, setHeaderBanner] = useState<Banner | null>(null);
+  const [headerBannerLoading, setHeaderBannerLoading] = useState(true);
   const [footerBanner, setFooterBanner] = useState<Banner | null>(null);
   const { language, setLanguage } = useLanguage();
   const location = useLocation();
@@ -28,6 +29,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
 
   useEffect(() => {
     const loadHeaderBanner = async () => {
+      setHeaderBannerLoading(true);
       if (categoriaActual) {
         const { data: propio } = await supabase
           .from('banners')
@@ -41,6 +43,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
 
         if (propio) {
           setHeaderBanner(propio as Banner);
+          setHeaderBannerLoading(false);
           return;
         }
       }
@@ -56,6 +59,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
         .maybeSingle();
 
       setHeaderBanner(general as Banner | null);
+      setHeaderBannerLoading(false);
     };
 
     loadHeaderBanner();
@@ -137,14 +141,26 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
         </div>
       </div>
 
-      {/* Header banner — espacio reservado para publicidad contratada */}
-      {headerBanner && (
+      {/* Header banner — espacio reservado para publicidad contratada.
+          Mientras se confirma si hay banner, se reserva la misma altura
+          final para evitar que el contenido salte al cargar (CLS). */}
+      {headerBannerLoading && (
+        <div className="bg-slate-100 border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 py-3">
+            <div className="w-full h-32 sm:h-44 lg:h-52 rounded-lg bg-slate-200 animate-pulse" />
+          </div>
+        </div>
+      )}
+      {!headerBannerLoading && headerBanner && (
         <div className="bg-slate-100 border-b border-slate-200">
           <div className="max-w-7xl mx-auto px-4 py-3">
             <a href={headerBanner.link ?? '#'} target="_blank" rel="noopener noreferrer">
               <img
                 src={headerBanner.imagen_url}
                 alt={headerBanner.titulo ?? 'Banner publicitario'}
+                width={1248}
+                height={208}
+                loading="eager"
                 className="w-full h-32 sm:h-44 lg:h-52 object-contain rounded-lg bg-white"
               />
             </a>
