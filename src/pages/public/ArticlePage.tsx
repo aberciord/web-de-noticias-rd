@@ -7,6 +7,7 @@ import { formatFecha, tiempoRelativo } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/context/LanguageContext';
 import { useDocumentMeta } from '@/lib/useDocumentMeta';
+import { pexelsResize } from '@/lib/imageOptimize';
 import ArticleCard from '@/components/public/ArticleCard';
 import CommentSection from '@/components/public/CommentSection';
 
@@ -130,7 +131,7 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
                 <User className="w-4 h-4" />
                 {article.autor}
               </span>
-              <span className="text-sm text-slate-400 hidden sm:inline">
+              <span className="text-sm text-slate-500 hidden sm:inline">
                 {formatFecha(article.publicado_en)}
               </span>
             </div>
@@ -158,7 +159,15 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
 
           {article.imagen_url && (
             <div className="mb-6 rounded-xl overflow-hidden">
-              <img src={article.imagen_url} alt={titulo} className="w-full object-cover" />
+              <img
+                src={pexelsResize(article.imagen_url, 1000)}
+                alt={titulo}
+                width={1000}
+                height={625}
+                loading="eager"
+                fetchPriority="high"
+                className="w-full object-cover"
+              />
             </div>
           )}
 
@@ -166,7 +175,7 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
           {midBanner && (
             <div className="my-6 rounded-lg overflow-hidden">
               <a href={midBanner.link ?? '#'} target="_blank" rel="noopener noreferrer">
-                <img src={midBanner.imagen_url} alt={midBanner.titulo ?? 'Publicidad'} className="w-full h-40 sm:h-56 object-cover" />
+                <img src={midBanner.imagen_url} alt={midBanner.titulo ?? 'Publicidad'} loading="lazy" className="w-full h-40 sm:h-56 object-cover" />
               </a>
             </div>
           )}
@@ -241,7 +250,7 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
           {sidebarBanner && (
             <div className="rounded-lg overflow-hidden">
               <a href={sidebarBanner.link ?? '#'} target="_blank" rel="noopener noreferrer">
-                <img src={sidebarBanner.imagen_url} alt={sidebarBanner.titulo ?? 'Publicidad'} className="w-full" />
+                <img src={sidebarBanner.imagen_url} alt={sidebarBanner.titulo ?? 'Publicidad'} loading="lazy" className="w-full" />
               </a>
             </div>
           )}

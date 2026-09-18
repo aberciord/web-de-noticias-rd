@@ -4,6 +4,7 @@ import type { Article } from '@/lib/types';
 import { getCategoriaLabel } from '@/lib/types';
 import { tiempoRelativo } from '@/lib/format';
 import { useLanguage } from '@/context/LanguageContext';
+import { pexelsResize } from '@/lib/imageOptimize';
 
 interface ArticleCardProps {
   article: Article;
@@ -22,8 +23,11 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
       >
         {article.imagen_url && (
           <img
-            src={article.imagen_url}
+            src={pexelsResize(article.imagen_url, 260)}
             alt={titulo}
+            width={260}
+            height={200}
+            loading="lazy"
             className="w-24 h-24 sm:w-32 sm:h-24 object-cover rounded-lg flex-shrink-0"
           />
         )}
@@ -68,8 +72,11 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
       {article.imagen_url && (
         <div className="aspect-[16/10] overflow-hidden bg-slate-100">
           <img
-            src={article.imagen_url}
+            src={pexelsResize(article.imagen_url, 500)}
             alt={titulo}
+            width={500}
+            height={310}
+            loading="lazy"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         </div>
@@ -79,7 +86,7 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
           <span className="text-xs font-semibold text-red-600 uppercase tracking-wide bg-red-50 px-2 py-0.5 rounded">
             {getCategoriaLabel(article.categoria, language)}
           </span>
-          <span className="text-xs text-slate-400">{tiempoRelativo(article.publicado_en)}</span>
+          <span className="text-xs text-slate-500">{tiempoRelativo(article.publicado_en)}</span>
         </div>
         <h3 className="text-lg font-bold text-slate-900 group-hover:text-red-600 transition-colors leading-snug line-clamp-3">
           {titulo}
@@ -90,7 +97,7 @@ export default function ArticleCard({ article, variant = 'default' }: ArticleCar
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
           <span className="text-xs text-slate-500">{language === 'en' ? 'By' : 'Por'} {article.autor}</span>
           {article.fuente_nombre && (
-            <span className="text-xs text-slate-400">{language === 'en' ? 'Source' : 'Fuente'}: {article.fuente_nombre}</span>
+            <span className="text-xs text-slate-500">{language === 'en' ? 'Source' : 'Fuente'}: {article.fuente_nombre}</span>
           )}
         </div>
       </div>

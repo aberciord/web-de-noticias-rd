@@ -6,6 +6,7 @@ import ArticleCard from '@/components/public/ArticleCard';
 import YoutubeLiveSection from '@/components/public/YoutubeLiveSection';
 import { tiempoRelativo } from '@/lib/format';
 import { useLanguage } from '@/context/LanguageContext';
+import { pexelsResize } from '@/lib/imageOptimize';
 
 interface HomePageProps {
   articles: Article[];
@@ -34,6 +35,7 @@ export default function HomePage({ articles }: HomePageProps) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
+      <h1 className="sr-only">El poder del pueblo RD — {language === 'en' ? 'Dominican news portal' : 'Portal de noticias dominicano'}</h1>
       {/* Hero section */}
       <section className="mb-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -44,8 +46,12 @@ export default function HomePage({ articles }: HomePageProps) {
           >
             {featured.imagen_url && (
               <img
-                src={featured.imagen_url}
+                src={pexelsResize(featured.imagen_url, 1200)}
                 alt={featuredTitulo}
+                width={1200}
+                height={750}
+                loading="eager"
+                fetchPriority="high"
                 className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-70 group-hover:scale-105 transition-all duration-500"
               />
             )}
@@ -135,6 +141,7 @@ function CategorySection({ categoria, articles }: { categoria: Categoria; articl
         <h2 className="text-xl font-bold text-slate-900">{language === 'en' ? cat.labelEn : cat.label}</h2>
         <Link
           to={`/categoria/${categoria}`}
+          aria-label={`${language === 'en' ? 'See more' : 'Ver más'} — ${language === 'en' ? cat.labelEn : cat.label}`}
           className="flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
         >
           {language === 'en' ? 'See more' : 'Ver más'} <ArrowRight className="w-4 h-4" />
@@ -148,8 +155,11 @@ function CategorySection({ categoria, articles }: { categoria: Categoria; articl
       >
         {main.imagen_url && (
           <img
-            src={main.imagen_url}
+            src={pexelsResize(main.imagen_url, 1000)}
             alt={mainTitulo}
+            width={1000}
+            height={330}
+            loading="lazy"
             className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-70 group-hover:scale-105 transition-all duration-500"
           />
         )}

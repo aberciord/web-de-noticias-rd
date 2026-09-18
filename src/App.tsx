@@ -8,18 +8,25 @@ import ArticlePage from '@/pages/public/ArticlePage';
 import AboutPage from '@/pages/public/AboutPage';
 import PrivacyPolicyPage from '@/pages/public/PrivacyPolicyPage';
 import TermsOfUsePage from '@/pages/public/TermsOfUsePage';
-import AdminLogin from '@/pages/admin/AdminLogin';
-import AdminLayout from '@/components/admin/AdminLayout';
-import AdminDashboard from '@/pages/admin/AdminDashboard';
-import ReviewQueue from '@/pages/admin/ReviewQueue';
-import ArticleEditor from '@/pages/admin/ArticleEditor';
-import SourcesManager from '@/pages/admin/SourcesManager';
-import BannersManager from '@/pages/admin/BannersManager';
-import CommentsManager from '@/pages/admin/CommentsManager';
-import EditorsManager from '@/pages/admin/EditorsManager';
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Article } from '@/lib/types';
+
+// El panel de administración se carga aparte (code-splitting): los
+// visitantes del sitio público nunca descargan este JS.
+const AdminLogin = lazy(() => import('@/pages/admin/AdminLogin'));
+const AdminLayout = lazy(() => import('@/components/admin/AdminLayout'));
+const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
+const ReviewQueue = lazy(() => import('@/pages/admin/ReviewQueue'));
+const ArticleEditor = lazy(() => import('@/pages/admin/ArticleEditor'));
+const SourcesManager = lazy(() => import('@/pages/admin/SourcesManager'));
+const BannersManager = lazy(() => import('@/pages/admin/BannersManager'));
+const CommentsManager = lazy(() => import('@/pages/admin/CommentsManager'));
+const EditorsManager = lazy(() => import('@/pages/admin/EditorsManager'));
+
+function AdminLoadingFallback() {
+  return <div className="min-h-screen flex items-center justify-center text-slate-400">Cargando...</div>;
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -76,26 +83,35 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Admin login */}
-          <Route path="/panel-8f3k2qx9" element={<AdminLogin />} />
+          <Route
+            path="/panel-8f3k2qx9"
+            element={
+              <Suspense fallback={<AdminLoadingFallback />}>
+                <AdminLogin />
+              </Suspense>
+            }
+          />
 
           {/* Admin panel */}
           <Route
             path="/panel-8f3k2qx9/*"
             element={
               <ProtectedRoute>
-                <AdminLayout>
-                  <Routes>
-                    <Route path="dashboard" element={<AdminDashboard />} />
-                    <Route path="revision" element={<ReviewQueue />} />
-                    <Route path="crear" element={<ArticleEditor />} />
-                    <Route path="editar/:id" element={<ArticleEditor />} />
-                    <Route path="fuentes" element={<SourcesManager />} />
-                    <Route path="banners" element={<BannersManager />} />
-                    <Route path="comentarios" element={<CommentsManager />} />
-                    <Route path="editores" element={<EditorsManager />} />
-                    <Route path="*" element={<Navigate to="/panel-8f3k2qx9/dashboard" replace />} />
-                  </Routes>
-                </AdminLayout>
+                <Suspense fallback={<AdminLoadingFallback />}>
+                  <AdminLayout>
+                    <Routes>
+                      <Route path="dashboard" element={<AdminDashboard />} />
+                      <Route path="revision" element={<ReviewQueue />} />
+                      <Route path="crear" element={<ArticleEditor />} />
+                      <Route path="editar/:id" element={<ArticleEditor />} />
+                      <Route path="fuentes" element={<SourcesManager />} />
+                      <Route path="banners" element={<BannersManager />} />
+                      <Route path="comentarios" element={<CommentsManager />} />
+                      <Route path="editores" element={<EditorsManager />} />
+                      <Route path="*" element={<Navigate to="/panel-8f3k2qx9/dashboard" replace />} />
+                    </Routes>
+                  </AdminLayout>
+                </Suspense>
               </ProtectedRoute>
             }
           />

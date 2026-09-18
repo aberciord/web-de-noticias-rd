@@ -160,6 +160,8 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
               <img
                 src="/logo.png"
                 alt="El poder del pueblo RD"
+                width={1254}
+                height={1254}
                 className="h-20 sm:h-24 w-auto transition-transform group-hover:scale-105"
               />
               <div className="hidden md:block">
@@ -186,11 +188,19 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
             </div>
 
             <div className="flex items-center gap-3">
-              <button className="hidden sm:flex w-9 h-9 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+              <button
+                aria-label={language === 'en' ? 'Search' : 'Buscar'}
+                className="hidden sm:flex w-9 h-9 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
+              >
                 <Search className="w-5 h-5" />
               </button>
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label={
+                  mobileMenuOpen
+                    ? (language === 'en' ? 'Close menu' : 'Cerrar menú')
+                    : (language === 'en' ? 'Open menu' : 'Abrir menú')
+                }
                 className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100"
               >
                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -246,6 +256,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
               <img
                 src={footerBanner.imagen_url}
                 alt={footerBanner.titulo ?? 'Banner publicitario'}
+                loading="lazy"
                 className="w-full h-24 sm:h-32 object-contain rounded-lg bg-white"
               />
             </a>
@@ -255,7 +266,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
               <div className="flex items-center gap-3 mb-4">
-                <img src="/logo.png" alt="El poder del pueblo RD" className="h-12 w-12 rounded-lg bg-white object-contain p-1" />
+                <img src="/logo.png" alt="El poder del pueblo RD" width={1254} height={1254} loading="lazy" className="h-12 w-12 rounded-lg bg-white object-contain p-1" />
                 <span className="font-heading text-xl font-bold text-white">
                   El poder del pueblo <span className="text-red-500">RD</span>
                 </span>

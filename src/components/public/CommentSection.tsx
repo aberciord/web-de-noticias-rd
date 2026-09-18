@@ -121,7 +121,7 @@ export default function CommentSection({ articleId }: CommentSectionProps) {
             className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-colors resize-none"
           />
           <div className="flex items-center justify-between mt-2">
-            <span className="text-xs text-slate-400">{commentText.length}/500</span>
+            <span className="text-xs text-slate-500">{commentText.length}/500</span>
             <button
               type="submit"
               disabled={submitting || !commentText.trim()}
@@ -160,9 +160,9 @@ export default function CommentSection({ articleId }: CommentSectionProps) {
 
       {/* Comments list */}
       {loading ? (
-        <p className="text-sm text-slate-400 text-center py-6">Cargando comentarios...</p>
+        <p className="text-sm text-slate-500 text-center py-6">Cargando comentarios...</p>
       ) : comments.length === 0 ? (
-        <p className="text-sm text-slate-400 text-center py-6">
+        <p className="text-sm text-slate-500 text-center py-6">
           Sé el primero en comentar.
         </p>
       ) : (
@@ -183,7 +183,7 @@ export default function CommentSection({ articleId }: CommentSectionProps) {
                     <span className="text-sm font-semibold text-slate-900">
                       {comment.autor_nombre}
                     </span>
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-slate-500">
                       {tiempoRelativo(comment.creado_en)}
                     </span>
                   </div>
@@ -191,6 +191,7 @@ export default function CommentSection({ articleId }: CommentSectionProps) {
                     <button
                       onClick={() => handleDelete(comment.id)}
                       className="text-slate-400 hover:text-red-600 transition-colors"
+                      aria-label="Eliminar comentario"
                       title="Eliminar comentario"
                     >
                       <Trash2 className="w-4 h-4" />
