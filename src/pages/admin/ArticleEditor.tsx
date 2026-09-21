@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { CATEGORIAS, ESTADOS, getEstadoColor, getEstadoLabel } from '@/lib/types';
 import type { Article, EstadoArticulo } from '@/lib/types';
 import { useAuth } from '@/context/AuthContext';
+import { uploadImage } from '@/lib/uploadImage';
 
 interface PexelsResult {
   id: number;
@@ -80,48 +81,11 @@ export default function ArticleEditor() {
     setArticle((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Redimensiona (máx. 1600 px) y convierte a JPEG en el navegador: acepta fotos
-  // grandes o en formatos como HEIC (iPhone) y evita el límite de 5 MB del bucket.
-  const prepareImage = (file: File): Promise<Blob> =>
-    new Promise((resolve, reject) => {
-      const url = URL.createObjectURL(file);
-      const img = new Image();
-      img.onload = () => {
-        URL.revokeObjectURL(url);
-        const scale = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.round(img.naturalWidth * scale);
-        canvas.height = Math.round(img.naturalHeight * scale);
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return reject(new Error('El navegador no pudo procesar la imagen.'));
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        canvas.toBlob(
-          (blob) => (blob ? resolve(blob) : reject(new Error('No se pudo convertir la imagen.'))),
-          'image/jpeg',
-          0.85,
-        );
-      };
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        reject(new Error('No se pudo leer la imagen. Prueba con un archivo JPG o PNG.'));
-      };
-      img.src = url;
-    });
-
   const handleUploadImage = async (file: File) => {
     setImageError(null);
     setUploading(true);
     try {
-      const blob = await prepareImage(file);
-      const path = `${crypto.randomUUID()}.jpg`;
-      const { error: upErr } = await supabase.storage
-        .from('article-images')
-        .upload(path, blob, { contentType: 'image/jpeg', cacheControl: '31536000' });
-      if (upErr) throw new Error(upErr.message);
-      const { data } = supabase.storage.from('article-images').getPublicUrl(path);
-      update('imagen_url', data.publicUrl);
+      update('imagen_url', await uploadImage(file));
     } catch (err) {
       setImageError(`No se pudo subir la imagen: ${err instanceof Error ? err.message : 'error desconocido'}`);
     } finally {

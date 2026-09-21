@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Image, Plus, Trash2, Edit3, X, Check, Power } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Image, Upload, Loader2, Plus, Trash2, Edit3, X, Check, Power } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { CATEGORIAS } from '@/lib/types';
+import { uploadImage } from '@/lib/uploadImage';
 import type { Banner, PosicionBanner, Categoria } from '@/lib/types';
 
 const POSICIONES: { value: PosicionBanner; label: string }[] = [
@@ -59,6 +60,8 @@ export default function BannersManager() {
   const [form, setForm] = useState<BannerForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadBanners();
@@ -80,6 +83,19 @@ export default function BannersManager() {
     setEditing(null);
     setShowForm(false);
     setError(null);
+  };
+
+  const handleUpload = async (file: File) => {
+    setError(null);
+    setUploading(true);
+    try {
+      const url = await uploadImage(file, MAX_IMAGE_BYTES);
+      setForm((f) => ({ ...f, imagen_url: url }));
+    } catch (err) {
+      setError(`No se pudo subir la imagen: ${err instanceof Error ? err.message : 'error desconocido'}`);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -199,8 +215,34 @@ export default function BannersManager() {
             </div>
             <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                URL de la imagen <span className="text-slate-400 font-normal">(JPG, PNG o WebP, máx. 2MB)</span>
+                Imagen <span className="text-slate-400 font-normal">(sube un archivo o pega una URL; máx. 2MB)</span>
               </label>
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const f = Array.from(e.dataTransfer.files).find((x) => x.type.startsWith('image/'));
+                  if (f) handleUpload(f);
+                }}
+                className="flex items-center justify-center gap-2 w-full mb-2 px-3 py-2 border border-dashed border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+              >
+                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                {uploading ? 'Subiendo...' : 'Subir imagen desde tu computadora (clic o arrastrar)'}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleUpload(f);
+                  e.target.value = '';
+                }}
+              />
               <input
                 type="url"
                 required
