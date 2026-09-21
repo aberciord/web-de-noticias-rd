@@ -13,6 +13,32 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 const PEXELS_API_KEY = Deno.env.get("PEXELS_API_KEY");
 
+// Imagen original de la noticia (og:image / twitter:image de la página fuente).
+async function fetchSourceImage(pageUrl: string | null | undefined): Promise<string | null> {
+  if (!pageUrl) return null;
+  try {
+    const r = await fetch(pageUrl, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; ElPoderDelPuebloBot/1.0)" },
+      signal: AbortSignal.timeout(5000),
+      redirect: "follow",
+    });
+    if (!r.ok) return null;
+    const html = (await r.text()).slice(0, 200000);
+    const tags = html.match(/<meta[^>]+>/gi) ?? [];
+    for (const prop of ["og:image:secure_url", "og:image", "twitter:image"]) {
+      for (const t of tags) {
+        if (!new RegExp(`(property|name)=["']${prop}["']`, "i").test(t)) continue;
+        const m = t.match(/content=["']([^"']+)["']/i);
+        if (!m) continue;
+        const abs = new URL(m[1].replace(/&amp;/g, "&"), r.url).toString();
+        if (!abs.startsWith("http") || /logo|default|placeholder|favicon/i.test(abs)) continue;
+        return abs;
+      }
+    }
+  } catch (_e) { /* sin imagen de origen: se usa Pexels */ }
+  return null;
+}
+
 // Busca en Pexels una foto que ilustre la nota y que no esté ya en otro artículo.
 async function findImage(query: string): Promise<string | null> {
   if (!PEXELS_API_KEY || !query) return null;
@@ -234,7 +260,8 @@ para un portal dominicano. Al final agrega: "Fuente: ${sourceName}" con enlace $
 Luego traduce la nota completa al inglés.
 
 Responde SOLO en JSON (sin markdown, sin texto adicional):
-{"titulo_es": "...", "cuerpo_es": "...", "titulo_en": "...", "cuerpo_en": "...", "resumen_seo": "...", "imagen_query": "..."}
+{"titulo_es": "...", "cuerpo_es": "...", "titulo_en": "...", "cuerpo_en": "...", "resumen_seo": "...", "imagen_query": "...", "categoria": "..."}
+categoria: la que MEJOR describe el tema real de la nota, solo una de: noticias, politica, deportes, farandula (política = candidaturas, partidos, gobierno, justicia y corrupción; farándula solo espectáculo y celebridades).
 imagen_query: 2 a 5 palabras EN INGLÉS para buscar una foto de stock que ilustre concretamente esta noticia (sin nombres propios de personas).`;
 
             const rewriteResponse = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -259,12 +286,16 @@ imagen_query: 2 a 5 palabras EN INGLÉS para buscar una foto de stock que ilustr
               if (jsonMatch) {
                 const article = JSON.parse(jsonMatch[0]);
 
-                const imagenUrl = await findImage(String(article.imagen_query ?? "").trim());
+                const imagenUrl =
+                  (await fetchSourceImage(item.url_original)) ??
+                  (await findImage(String(article.imagen_query ?? "").trim()));
 
                 const { error: articleError } = await supabase.from("articles").insert({
                   imagen_url: imagenUrl,
                   raw_item_id: item.id,
-                  categoria: item.categoria,
+                  categoria: ["noticias", "politica", "deportes", "farandula"].includes(article.categoria)
+                    ? article.categoria
+                    : item.categoria,
                   titulo_es: article.titulo_es,
                   cuerpo_es: article.cuerpo_es,
                   titulo_en: article.titulo_en,

@@ -53,6 +53,32 @@ function buildQuery(titulo: string, categoria: string): string {
   return CATEGORY_FALLBACK[categoria] ?? "news";
 }
 
+// Imagen original de la noticia (og:image / twitter:image de la página fuente).
+async function fetchSourceImage(pageUrl: string | null | undefined): Promise<string | null> {
+  if (!pageUrl) return null;
+  try {
+    const r = await fetch(pageUrl, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; ElPoderDelPuebloBot/1.0)" },
+      signal: AbortSignal.timeout(5000),
+      redirect: "follow",
+    });
+    if (!r.ok) return null;
+    const html = (await r.text()).slice(0, 200000);
+    const tags = html.match(/<meta[^>]+>/gi) ?? [];
+    for (const prop of ["og:image:secure_url", "og:image", "twitter:image"]) {
+      for (const t of tags) {
+        if (!new RegExp(`(property|name)=["']${prop}["']`, "i").test(t)) continue;
+        const m = t.match(/content=["']([^"']+)["']/i);
+        if (!m) continue;
+        const abs = new URL(m[1].replace(/&amp;/g, "&"), r.url).toString();
+        if (!abs.startsWith("http") || /logo|default|placeholder|favicon/i.test(abs)) continue;
+        return abs;
+      }
+    }
+  } catch (_e) { /* sin imagen de origen: se usa Pexels */ }
+  return null;
+}
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
@@ -91,7 +117,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: articles, error } = await adminClient
       .from("articles")
-      .select("id, categoria, titulo_es, imagen_url")
+      .select("id, categoria, titulo_es, imagen_url, fuente_url")
       .eq("estado", "publicado");
     if (error) throw error;
 
@@ -106,10 +132,26 @@ Deno.serve(async (req: Request) => {
     for (const a of articles ?? []) {
       const s = (summary[a.categoria] ??= { revisados: 0, incorrectas: 0, corregidas: 0 });
       s.revisados++;
-      const bad = !a.imagen_url || (counts.get(a.imagen_url) ?? 0) > 1 || forceIds.includes(a.id);
-      if (!bad || doneIds.includes(a.id)) continue;
+      if (doneIds.includes(a.id)) continue;
       if (processed >= batch) { pending++; continue; }
       processed++;
+      doneNow.push(a.id);
+
+      // 1) Imagen original de la noticia, si la fuente tiene una.
+      const src = await fetchSourceImage(a.fuente_url);
+      if (src && src !== a.imagen_url) {
+        const { error: srcErr } = await adminClient.from("articles").update({ imagen_url: src }).eq("id", a.id);
+        if (!srcErr) {
+          s.incorrectas++; s.corregidas++;
+          details.push({ id: a.id, titulo: a.titulo_es, origen: "fuente", imagen_url: src });
+          continue;
+        }
+      }
+      if (src && src === a.imagen_url) continue;
+
+      // 2) Sin imagen de origen: Pexels solo si falta, está repetida o se marcó a mano.
+      const bad = !a.imagen_url || (counts.get(a.imagen_url) ?? 0) > 1 || forceIds.includes(a.id);
+      if (!bad) continue;
       s.incorrectas++;
 
       const query = buildQuery(a.titulo_es, a.categoria);
@@ -122,13 +164,12 @@ Deno.serve(async (req: Request) => {
           if (![...used].some((u) => key(u) === key(url))) { chosen = url; break; }
         }
       }
-      if (!chosen) { details.push({ id: a.id, titulo: a.titulo_es, query, resultado: "sin resultado" }); doneNow.push(a.id); continue; }
+      if (!chosen) { details.push({ id: a.id, titulo: a.titulo_es, query, resultado: "sin resultado" }); continue; }
 
       const { error: upErr } = await adminClient.from("articles").update({ imagen_url: chosen }).eq("id", a.id);
       if (upErr) { details.push({ id: a.id, titulo: a.titulo_es, error: upErr.message }); continue; }
       used.add(chosen);
       s.corregidas++;
-      doneNow.push(a.id);
       details.push({ id: a.id, titulo: a.titulo_es, query, imagen_url: chosen });
     }
 
