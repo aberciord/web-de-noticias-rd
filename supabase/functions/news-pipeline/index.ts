@@ -11,6 +11,27 @@ const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+const PEXELS_API_KEY = Deno.env.get("PEXELS_API_KEY");
+
+// Busca en Pexels una foto que ilustre la nota y que no esté ya en otro artículo.
+async function findImage(query: string): Promise<string | null> {
+  if (!PEXELS_API_KEY || !query) return null;
+  try {
+    const r = await fetch(
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=15&orientation=landscape`,
+      { headers: { Authorization: PEXELS_API_KEY } },
+    );
+    if (!r.ok) return null;
+    const photos = ((await r.json()).photos ?? []) as { id: number }[];
+    for (const p of photos) {
+      const url = `https://images.pexels.com/photos/${p.id}/pexels-photo-${p.id}.jpeg?auto=compress&cs=tinysrgb&w=1200`;
+      const { data } = await supabase
+        .from("articles").select("id").like("imagen_url", `%pexels-photo-${p.id}.%`).limit(1);
+      if (!data || data.length === 0) return url;
+    }
+  } catch (_e) { /* la nota se publica sin imagen y el panel puede corregirla */ }
+  return null;
+}
 
 interface RSSItem {
   title: string;
@@ -213,7 +234,8 @@ para un portal dominicano. Al final agrega: "Fuente: ${sourceName}" con enlace $
 Luego traduce la nota completa al inglés.
 
 Responde SOLO en JSON (sin markdown, sin texto adicional):
-{"titulo_es": "...", "cuerpo_es": "...", "titulo_en": "...", "cuerpo_en": "...", "resumen_seo": "..."}`;
+{"titulo_es": "...", "cuerpo_es": "...", "titulo_en": "...", "cuerpo_en": "...", "resumen_seo": "...", "imagen_query": "..."}
+imagen_query: 2 a 5 palabras EN INGLÉS para buscar una foto de stock que ilustre concretamente esta noticia (sin nombres propios de personas).`;
 
             const rewriteResponse = await fetch("https://api.openai.com/v1/chat/completions", {
               method: "POST",
@@ -237,7 +259,10 @@ Responde SOLO en JSON (sin markdown, sin texto adicional):
               if (jsonMatch) {
                 const article = JSON.parse(jsonMatch[0]);
 
+                const imagenUrl = await findImage(String(article.imagen_query ?? "").trim());
+
                 const { error: articleError } = await supabase.from("articles").insert({
+                  imagen_url: imagenUrl,
                   raw_item_id: item.id,
                   categoria: item.categoria,
                   titulo_es: article.titulo_es,
