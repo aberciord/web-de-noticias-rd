@@ -23,7 +23,7 @@ Deno.serve(async () => {
       { loc: `${SITE}/categoria/noticias`, changefreq: "hourly", priority: "0.8" },
       { loc: `${SITE}/categoria/deportes`, changefreq: "hourly", priority: "0.8" },
       { loc: `${SITE}/categoria/politica`, changefreq: "hourly", priority: "0.8" },
-      { loc: `${SITE}/categoria/farandula`, changefreq: "hourly", priority: "0.8" },
+      { loc: `${SITE}/categoria/entretenimiento`, changefreq: "hourly", priority: "0.8" },
       { loc: `${SITE}/acerca`, changefreq: "monthly", priority: "0.3" },
       { loc: `${SITE}/privacidad`, changefreq: "yearly", priority: "0.1" },
       { loc: `${SITE}/terminos`, changefreq: "yearly", priority: "0.1" },

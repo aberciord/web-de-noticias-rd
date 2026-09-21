@@ -45,7 +45,7 @@ const CATEGORY_FALLBACK: Record<string, string> = {
   noticias: "Santo Domingo city skyline",
   politica: "government building flag",
   deportes: "sports stadium",
-  farandula: "entertainment stage lights",
+  entretenimiento: "entertainment stage lights",
 };
 
 function buildQuery(titulo: string, categoria: string): string {

@@ -10,7 +10,7 @@ export default function AboutPage() {
       <div className="prose prose-slate max-w-none space-y-6">
         <p className="text-lg text-slate-700 leading-relaxed">
           El poder del pueblo RD es un portal de noticias de la República Dominicana que ofrece información
-          actualizada sobre noticias, deportes, política y farándula, con contenido original en
+          actualizada sobre noticias, deportes, política y entretenimiento, con contenido original en
           español e inglés.
         </p>
 

@@ -1,4 +1,4 @@
-export type Categoria = 'noticias' | 'deportes' | 'politica' | 'farandula';
+export type Categoria = 'noticias' | 'deportes' | 'politica' | 'entretenimiento';
 
 export type EstadoArticulo =
   | 'pendiente_revision'
@@ -61,7 +61,7 @@ export const CATEGORIAS: { value: Categoria; label: string; labelEn: string }[] 
   { value: 'noticias', label: 'Noticias', labelEn: 'News' },
   { value: 'politica', label: 'Política', labelEn: 'Politics' },
   { value: 'deportes', label: 'Deportes', labelEn: 'Sports' },
-  { value: 'farandula', label: 'Farándula', labelEn: 'Entertainment' },
+  { value: 'entretenimiento', label: 'Entretenimiento', labelEn: 'Entertainment' },
 ];
 
 export const ESTADOS: { value: EstadoArticulo; label: string; color: string }[] = [

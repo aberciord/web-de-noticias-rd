@@ -290,7 +290,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
               <p className="text-sm text-slate-400 max-w-md leading-relaxed">
                 {language === 'en'
                   ? 'News portal of the Dominican Republic. Up-to-date information on news, sports, politics, and entertainment. Original content generated respecting copyright under Law 65-00.'
-                  : 'Portal de noticias de la República Dominicana. Información actualizada sobre noticias, deportes, política y farándula. Contenido original generado respetando el derecho de autor conforme a la Ley 65-00.'}
+                  : 'Portal de noticias de la República Dominicana. Información actualizada sobre noticias, deportes, política y entretenimiento. Contenido original generado respetando el derecho de autor conforme a la Ley 65-00.'}
               </p>
               <div className="flex items-center gap-3 mt-4">
                 <a

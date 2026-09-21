@@ -12,6 +12,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 const PEXELS_API_KEY = Deno.env.get("PEXELS_API_KEY");
+const CATEGORIAS = ["noticias", "politica", "deportes", "entretenimiento"];
 
 // Imagen original de la noticia (og:image / twitter:image de la página fuente).
 async function fetchSourceImage(pageUrl: string | null | undefined): Promise<string | null> {
@@ -259,10 +260,8 @@ Escribe una nota periodística original de 150-250 palabras en español, tono ne
 para un portal dominicano. Al final agrega: "Fuente: ${sourceName}" con enlace ${item.url_original}.
 Luego traduce la nota completa al inglés.
 
-Responde SOLO en JSON (sin markdown, sin texto adicional):
-{"titulo_es": "...", "cuerpo_es": "...", "titulo_en": "...", "cuerpo_en": "...", "resumen_seo": "...", "imagen_query": "...", "categoria": "..."}
-categoria: la que MEJOR describe el tema real de la nota, solo una de: noticias, politica, deportes, farandula (política = candidaturas, partidos, gobierno, justicia y corrupción; farándula solo espectáculo y celebridades).
-imagen_query: 2 a 5 palabras EN INGLÉS para buscar una foto de stock que ilustre concretamente esta noticia (sin nombres propios de personas).`;
+categoria (una sola): noticias | politica (gobierno, partidos, justicia, corrupción) | deportes | entretenimiento (música, cine, series y streaming, celebridades, artistas, conciertos, premios, televisión, cultura pop y contenido viral, con énfasis en República Dominicana y Latinoamérica; excluir rumores sin fuente, vida privada y contenido difamatorio).
+imagen_query: 2 a 5 palabras EN INGLÉS para una foto de stock que ilustre la noticia (sin nombres de personas).`;
 
             const rewriteResponse = await fetch("https://api.openai.com/v1/chat/completions", {
               method: "POST",
@@ -273,7 +272,27 @@ imagen_query: 2 a 5 palabras EN INGLÉS para buscar una foto de stock que ilustr
               body: JSON.stringify({
                 model: "gpt-4o",
                 max_tokens: 1500,
-                response_format: { type: "json_object" },
+                response_format: {
+                  type: "json_schema",
+                  json_schema: {
+                    name: "nota",
+                    strict: true,
+                    schema: {
+                      type: "object",
+                      additionalProperties: false,
+                      required: ["titulo_es", "cuerpo_es", "titulo_en", "cuerpo_en", "resumen_seo", "imagen_query", "categoria"],
+                      properties: {
+                        titulo_es: { type: "string" },
+                        cuerpo_es: { type: "string" },
+                        titulo_en: { type: "string" },
+                        cuerpo_en: { type: "string" },
+                        resumen_seo: { type: "string" },
+                        imagen_query: { type: "string" },
+                        categoria: { type: "string", enum: CATEGORIAS },
+                      },
+                    },
+                  },
+                },
                 messages: [{ role: "user", content: rewritePrompt }],
               }),
             });
@@ -293,7 +312,7 @@ imagen_query: 2 a 5 palabras EN INGLÉS para buscar una foto de stock que ilustr
                 const { error: articleError } = await supabase.from("articles").insert({
                   imagen_url: imagenUrl,
                   raw_item_id: item.id,
-                  categoria: ["noticias", "politica", "deportes", "farandula"].includes(article.categoria)
+                  categoria: CATEGORIAS.includes(article.categoria)
                     ? article.categoria
                     : item.categoria,
                   titulo_es: article.titulo_es,

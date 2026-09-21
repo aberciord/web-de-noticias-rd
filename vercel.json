@@ -1,4 +1,10 @@
 {
+  "redirects": [
+    { "source": "/categoria/farandula", "destination": "/categoria/entretenimiento", "permanent": true },
+    { "source": "/categoria/farandula/:path*", "destination": "/categoria/entretenimiento/:path*", "permanent": true },
+    { "source": "/farandula", "destination": "/categoria/entretenimiento", "permanent": true },
+    { "source": "/farandula/:path*", "destination": "/categoria/entretenimiento/:path*", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "https://xhfqkhzyoonihxxkwrki.supabase.co/functions/v1/sitemap" },
     { "source": "/((?!assets/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }

@@ -43,7 +43,7 @@ Deno.serve(async (req: Request) => {
 
     const prompt = `Basado en este hecho noticioso (NO copies el texto, redacta desde cero):
 Texto base: ${body.input_text}
-Categoría: ${body.categoria}
+Categoría: ${body.categoria}${body.categoria === "entretenimiento" ? " (música, cine, series y streaming, celebridades, artistas, conciertos, premios, televisión, cultura pop y contenido viral, con énfasis en República Dominicana y Latinoamérica; sin rumores sin fuente, vida privada ni contenido difamatorio)" : ""}
 
 Escribe una nota periodística original de 150-250 palabras en español, tono neutral,
 para un portal dominicano. Al final agrega: "Fuente: ${body.fuente_nombre ?? "Fuente"}" con enlace ${body.fuente_url ?? ""}.
