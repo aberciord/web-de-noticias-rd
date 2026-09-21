@@ -30,7 +30,7 @@ export default function ArticleEditor() {
     fuente_nombre: '',
     fuente_url: '',
     imagen_url: '',
-    autor: 'IA',
+    autor: 'Redacción',
     estado: 'pendiente_revision',
   });
   const [loading, setLoading] = useState(isEditing);
@@ -147,8 +147,8 @@ export default function ArticleEditor() {
       resumen_seo: article.resumen_seo,
       fuente_nombre: article.fuente_nombre,
       fuente_url: article.fuente_url,
-      imagen_url: article.imagen_url,
-      autor: article.autor ?? 'IA',
+      imagen_url: article.imagen_url?.trim() || null,
+      autor: article.autor?.trim() || 'Redacción',
       estado,
     };
 

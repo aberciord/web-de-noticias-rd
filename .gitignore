@@ -31,3 +31,6 @@ Gemini_Generated_Image_*.jpeg
 
 # Local Netlify folder
 .netlify
+
+# Config local de Claude Code
+.claude/

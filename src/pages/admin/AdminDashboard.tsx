@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FileEdit, CheckCircle, XCircle, Globe, TrendingUp, Clock, ArrowRight, Zap, AlertTriangle, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { CATEGORIAS, getEstadoColor, getEstadoLabel } from '@/lib/types';
+import { CATEGORIAS, ESTADOS, getEstadoColor, getEstadoLabel } from '@/lib/types';
 import type { Article } from '@/lib/types';
 
 interface CronRunLog {
@@ -18,15 +18,10 @@ import { tiempoRelativo } from '@/lib/format';
 export default function AdminDashboard() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [cronLogs, setCronLogs] = useState<CronRunLog[]>([]);
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [catCounts, setCatCounts] = useState<Record<string, number>>({});
   const [fixing, setFixing] = useState(false);
   const [fixResult, setFixResult] = useState<string | null>(null);
-
-  // Artículos cuya imagen ya se revisó a mano y no corresponde a la noticia.
-  const WRONG_IMAGE_IDS = [
-    'fb9259f3-21a8-4204-90d1-8178af592b34',
-    '5172b42c-1115-4f26-bfc8-63a1bb8f69bb',
-    '889a7150-616b-47e8-9afe-c6030d7b27d5',
-  ];
 
   const handleFixImages = async () => {
     setFixing(true);
@@ -42,7 +37,7 @@ export default function AdminDashboard() {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${sessionData.session?.access_token}`,
           },
-          body: JSON.stringify({ force_ids: WRONG_IMAGE_IDS, done_ids: done, batch: 6 }),
+          body: JSON.stringify({ done_ids: done, batch: 6 }),
         });
         const body = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(body.error || `Error ${res.status}`);
@@ -87,27 +82,32 @@ export default function AdminDashboard() {
       });
   }, []);
 
-  const counts = {
-    pendiente_revision: articles.filter((a) => a.estado === 'pendiente_revision').length,
-    aprobado: articles.filter((a) => a.estado === 'aprobado').length,
-    rechazado: articles.filter((a) => a.estado === 'rechazado').length,
-    publicado: articles.filter((a) => a.estado === 'publicado').length,
-  };
+  // Conteos reales en la base de datos (la lista de arriba solo trae los últimos 50).
+  useEffect(() => {
+    const count = (estado: string, categoria?: string) => {
+      let q = supabase.from('articles').select('id', { count: 'exact', head: true }).eq('estado', estado);
+      if (categoria) q = q.eq('categoria', categoria);
+      return q.then(({ count: c }) => c ?? 0);
+    };
+    Promise.all(ESTADOS.map((e) => count(e.value))).then((v) =>
+      setCounts(Object.fromEntries(ESTADOS.map((e, i) => [e.value, v[i]]))),
+    );
+    Promise.all(CATEGORIAS.map((c) => count('publicado', c.value))).then((v) =>
+      setCatCounts(Object.fromEntries(CATEGORIAS.map((c, i) => [c.value, v[i]]))),
+    );
+  }, []);
 
-  const byCategory = CATEGORIAS.map((cat) => ({
-    ...cat,
-    count: articles.filter((a) => a.categoria === cat.value && a.estado === 'publicado').length,
-  }));
+  const byCategory = CATEGORIAS.map((cat) => ({ ...cat, count: catCounts[cat.value] ?? 0 }));
 
   const recentPending = articles
     .filter((a) => a.estado === 'pendiente_revision')
     .slice(0, 5);
 
   const stats = [
-    { label: 'Pendientes', value: counts.pendiente_revision, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Aprobados', value: counts.aprobado, icon: CheckCircle, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Rechazados', value: counts.rechazado, icon: XCircle, color: 'text-red-600', bg: 'bg-red-50' },
-    { label: 'Publicados', value: counts.publicado, icon: Globe, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Pendientes', value: counts.pendiente_revision ?? 0, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { label: 'Aprobados', value: counts.aprobado ?? 0, icon: CheckCircle, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Rechazados', value: counts.rechazado ?? 0, icon: XCircle, color: 'text-red-600', bg: 'bg-red-50' },
+    { label: 'Publicados', value: counts.publicado ?? 0, icon: Globe, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   ];
 
   return (
@@ -130,7 +130,7 @@ export default function AdminDashboard() {
         <div>
           <h3 className="font-bold text-slate-900">Corregir imágenes de artículos publicados</h3>
           <p className="text-sm text-slate-500 mt-1">
-            Asigna una imagen de Pexels a los artículos sin imagen o con imagen repetida o incorrecta.
+            Usa la imagen original de cada noticia; si la fuente no tiene, asigna una de Pexels a los artículos sin imagen o con imagen repetida.
           </p>
           {fixResult && <p className="text-sm text-slate-700 mt-2">{fixResult}</p>}
         </div>
@@ -214,7 +214,7 @@ export default function AdminDashboard() {
                 <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-red-600 rounded-full transition-all duration-500"
-                    style={{ width: `${counts.publicado > 0 ? (cat.count / counts.publicado) * 100 : 0}%` }}
+                    style={{ width: `${(counts.publicado ?? 0) > 0 ? (cat.count / counts.publicado) * 100 : 0}%` }}
                   />
                 </div>
               </div>
@@ -222,7 +222,7 @@ export default function AdminDashboard() {
           </div>
           <div className="mt-6 pt-4 border-t border-slate-100 flex items-center gap-2 text-sm text-slate-500">
             <TrendingUp className="w-4 h-4" />
-            Total publicado: {counts.publicado}
+            Total publicado: {counts.publicado ?? 0}
           </div>
         </div>
       </div>
