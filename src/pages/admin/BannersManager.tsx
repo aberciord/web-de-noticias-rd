@@ -215,7 +215,7 @@ export default function BannersManager() {
             </div>
             <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Imagen <span className="text-slate-400 font-normal">(sube un archivo o pega una URL; máx. 2MB)</span>
+                Imagen <span className="text-slate-400 font-normal">(sube un archivo o pega una URL; máx. 2MB; ideal 1248 × 208 px para el encabezado)</span>
               </label>
               <button
                 type="button"
@@ -252,7 +252,7 @@ export default function BannersManager() {
                 placeholder="https://..."
               />
               {form.imagen_url && (
-                <img src={form.imagen_url} alt="" className="mt-2 rounded-lg w-full h-24 object-cover" />
+                <img src={form.imagen_url} alt="" className="mt-2 rounded-lg w-full h-auto max-h-64 object-contain bg-slate-100" />
               )}
             </div>
             <div className="sm:col-span-2">
@@ -330,7 +330,7 @@ export default function BannersManager() {
                   <Power className="w-4 h-4" />
                 </button>
               </div>
-              <img src={banner.imagen_url} alt={banner.titulo ?? ''} className="w-full h-24 object-cover rounded-lg mb-3" />
+              <img src={banner.imagen_url} alt={banner.titulo ?? ''} className="w-full h-auto max-h-40 object-contain bg-slate-100 rounded-lg mb-3" />
               {banner.titulo && <p className="text-sm font-medium text-slate-700 mb-2 truncate">{banner.titulo}</p>}
               <div className="flex items-center gap-2">
                 <button

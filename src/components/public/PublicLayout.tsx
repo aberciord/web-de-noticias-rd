@@ -161,7 +161,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                 width={1248}
                 height={208}
                 loading="eager"
-                className="w-full h-32 sm:h-44 lg:h-52 object-contain rounded-lg bg-white"
+                className="w-full h-auto max-h-[28rem] object-contain rounded-lg bg-white"
               />
             </a>
           </div>
@@ -273,7 +273,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                 src={footerBanner.imagen_url}
                 alt={footerBanner.titulo ?? 'Banner publicitario'}
                 loading="lazy"
-                className="w-full h-24 sm:h-32 object-contain rounded-lg bg-white"
+                className="w-full h-auto max-h-64 object-contain rounded-lg bg-white"
               />
             </a>
           </div>
