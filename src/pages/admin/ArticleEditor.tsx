@@ -63,6 +63,19 @@ export default function ArticleEditor() {
       });
   }, [id]);
 
+  // Pegar una imagen desde el portapapeles (Cmd + V) sube la imagen directamente.
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const file = Array.from(e.clipboardData?.files ?? []).find((f) => f.type.startsWith('image/'));
+      if (file) {
+        e.preventDefault();
+        handleUploadImage(file);
+      }
+    };
+    window.addEventListener('paste', onPaste);
+    return () => window.removeEventListener('paste', onPaste);
+  });
+
   const update = (field: keyof Article, value: string) => {
     setArticle((prev) => ({ ...prev, [field]: value }));
   };
@@ -477,10 +490,16 @@ export default function ArticleEditor() {
                 type="button"
                 disabled={uploading}
                 onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const f = Array.from(e.dataTransfer.files).find((x) => x.type.startsWith('image/'));
+                  if (f) handleUploadImage(f);
+                }}
                 className="flex items-center justify-center gap-2 w-full mb-2 px-3 py-2 border border-dashed border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors"
               >
                 {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                {uploading ? 'Subiendo...' : 'Subir imagen propia (JPG, PNG, WebP, HEIC)'}
+                {uploading ? 'Subiendo...' : 'Subir imagen propia: clic, arrastrar o pegar (Cmd + V)'}
               </button>
               <input
                 ref={fileInputRef}
