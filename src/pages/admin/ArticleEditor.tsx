@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Save, CheckCircle, XCircle, Globe, ArrowLeft, Sparkles, AlertCircle, Eye, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Save, CheckCircle, XCircle, Globe, ArrowLeft, Sparkles, AlertCircle, Eye, Image as ImageIcon, Loader2, Upload } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { CATEGORIAS, ESTADOS, getEstadoColor, getEstadoLabel } from '@/lib/types';
 import type { Article, Categoria, EstadoArticulo } from '@/lib/types';
@@ -45,6 +45,7 @@ export default function ArticleEditor() {
   const [imageResults, setImageResults] = useState<PexelsResult[]>([]);
   const [imageSearching, setImageSearching] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -65,7 +66,36 @@ export default function ArticleEditor() {
     setArticle((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleUploadImage = async (file: File) => {
+    setImageError(null);
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setImageError('Formato no válido. Usa JPG, PNG o WebP.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setImageError('La imagen supera 5 MB.');
+      return;
+    }
+    setUploading(true);
+    const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+    const path = `${crypto.randomUUID()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from('article-images')
+      .upload(path, file, { contentType: file.type, cacheControl: '31536000' });
+    setUploading(false);
+    if (upErr) {
+      setImageError(`No se pudo subir la imagen: ${upErr.message}`);
+      return;
+    }
+    const { data } = supabase.storage.from('article-images').getPublicUrl(path);
+    update('imagen_url', data.publicUrl);
+  };
+
   const handleSave = async (newEstado?: EstadoArticulo) => {
+    if (!article.titulo_es?.trim() || !article.cuerpo_es?.trim()) {
+      setError('El título y el cuerpo (Español) son obligatorios.');
+      return;
+    }
     setSaving(true);
     setError(null);
 
@@ -408,7 +438,7 @@ export default function ArticleEditor() {
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-sm font-medium text-slate-700">URL de imagen</label>
+                <label className="block text-sm font-medium text-slate-700">Imagen (subir, URL o Pexels)</label>
                 <button
                   type="button"
                   onClick={() => setShowImageSearch(!showImageSearch)}
@@ -418,6 +448,22 @@ export default function ArticleEditor() {
                   Buscar en Pexels
                 </button>
               </div>
+              <label className="flex items-center justify-center gap-2 w-full mb-2 px-3 py-2 border border-dashed border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors">
+                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                {uploading ? 'Subiendo...' : 'Subir imagen propia (JPG, PNG, WebP, máx. 5 MB)'}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  disabled={uploading}
+                  className="sr-only"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleUploadImage(f);
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+              {imageError && !showImageSearch && <p className="text-xs text-red-600 mb-1">{imageError}</p>}
               <input
                 type="url"
                 value={article.imagen_url ?? ''}

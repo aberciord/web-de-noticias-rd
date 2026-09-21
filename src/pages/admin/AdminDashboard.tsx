@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FileEdit, CheckCircle, XCircle, Globe, TrendingUp, Clock, ArrowRight, Zap, AlertTriangle } from 'lucide-react';
+import { FileEdit, CheckCircle, XCircle, Globe, TrendingUp, Clock, ArrowRight, Zap, AlertTriangle, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { CATEGORIAS, getEstadoColor, getEstadoLabel } from '@/lib/types';
 import type { Article, Categoria, EstadoArticulo } from '@/lib/types';
@@ -19,6 +19,42 @@ export default function AdminDashboard() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [cronLogs, setCronLogs] = useState<CronRunLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fixing, setFixing] = useState(false);
+  const [fixResult, setFixResult] = useState<string | null>(null);
+
+  // Artículos cuya imagen ya se revisó a mano y no corresponde a la noticia.
+  const WRONG_IMAGE_IDS = [
+    'fb9259f3-21a8-4204-90d1-8178af592b34',
+    '5172b42c-1115-4f26-bfc8-63a1bb8f69bb',
+    '889a7150-616b-47e8-9afe-c6030d7b27d5',
+  ];
+
+  const handleFixImages = async () => {
+    setFixing(true);
+    setFixResult(null);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fix-article-images`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${sessionData.session?.access_token}`,
+        },
+        body: JSON.stringify({ force_ids: WRONG_IMAGE_IDS }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || `Error ${res.status}`);
+      const lines = CATEGORIAS.map((c) => {
+        const r = body.por_categoria?.[c.value];
+        return r ? `${c.label}: ${r.incorrectas} incorrectas, ${r.corregidas} corregidas (de ${r.revisados})` : `${c.label}: 0`;
+      });
+      setFixResult(lines.join(' · '));
+    } catch (err) {
+      setFixResult(err instanceof Error ? err.message : 'Error al corregir imágenes');
+    } finally {
+      setFixing(false);
+    }
+  };
 
   useEffect(() => {
     supabase
@@ -78,6 +114,24 @@ export default function AdminDashboard() {
           <FileEdit className="w-4 h-4" />
           Ir a revisión
         </Link>
+      </div>
+
+      <div className="bg-white rounded-xl border border-slate-200 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h3 className="font-bold text-slate-900">Corregir imágenes de artículos publicados</h3>
+          <p className="text-sm text-slate-500 mt-1">
+            Asigna una imagen de Pexels a los artículos sin imagen o con imagen repetida o incorrecta.
+          </p>
+          {fixResult && <p className="text-sm text-slate-700 mt-2">{fixResult}</p>}
+        </div>
+        <button
+          onClick={handleFixImages}
+          disabled={fixing}
+          className="flex items-center gap-2 bg-violet-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-violet-700 disabled:opacity-50 transition-colors flex-shrink-0"
+        >
+          {fixing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
+          {fixing ? 'Corrigiendo...' : 'Corregir imágenes'}
+        </button>
       </div>
 
       {/* Stats */}

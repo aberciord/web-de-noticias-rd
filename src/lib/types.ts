@@ -72,8 +72,8 @@ export interface Comment {
 
 export const CATEGORIAS: { value: Categoria; label: string; labelEn: string }[] = [
   { value: 'noticias', label: 'Noticias', labelEn: 'News' },
-  { value: 'deportes', label: 'Deportes', labelEn: 'Sports' },
   { value: 'politica', label: 'Política', labelEn: 'Politics' },
+  { value: 'deportes', label: 'Deportes', labelEn: 'Sports' },
   { value: 'farandula', label: 'Farándula', labelEn: 'Entertainment' },
 ];
 

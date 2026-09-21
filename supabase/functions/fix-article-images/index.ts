@@ -1,0 +1,136 @@
+import { createClient } from "npm:@supabase/supabase-js@2.57.4";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
+};
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+const PEXELS_API_KEY = Deno.env.get("PEXELS_API_KEY");
+
+const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+// Palabras clave del titular (ES) -> búsqueda en Pexels (EN). Se prueba en orden.
+const KEYWORDS: [RegExp, string][] = [
+  [/tenis|tenista/i, "tennis player court"],
+  [/b[eé]isbol|mlb|jonr[oó]n|bateo|dodgers|mets|yankees|cardenales|grandes ligas|estrellas orientales|[áa]guilas|lidom|pitcher/i, "baseball stadium game"],
+  [/baloncesto|nba/i, "basketball court game"],
+  [/f[uú]tbol|chelsea|tottenham|mundial de atletismo|atletismo/i, "soccer stadium match"],
+  [/juegos santo domingo|comit[eé] organizador/i, "sports competition stadium"],
+  [/omsa|metro|corredor|transporte|autob[uú]s/i, "city bus public transport"],
+  [/arroz|agr[ií]cola|agro|importaci/i, "rice field farm"],
+  [/coe|alerta|lluvia|tormenta|el[eé]ctrica/i, "storm clouds lightning"],
+  [/air france|aerol[ií]nea|vuelo|aeropuerto/i, "airplane airport"],
+  [/google|conectividad|internet|datos|tecnolog/i, "data center technology"],
+  [/alcantarillado|obra|infraestructura/i, "construction workers infrastructure"],
+  [/banda|drogaba|robo|arrest|desmantel|polic[ií]a/i, "police officers"],
+  [/adolescent|hogares|menores/i, "teenager silhouette"],
+  [/tribunal|scj|indemnizaci[oó]n|justicia|juez/i, "courthouse justice gavel"],
+  [/congreso|ley|reforma|decreto|senado|diputado/i, "parliament legislative chamber"],
+  [/educaci[oó]n|escuela|rural/i, "school classroom students"],
+  [/contaminaci[oó]n|salud|suicidio/i, "air pollution city smog"],
+  [/frontera|dajab[oó]n|haiti|comercio/i, "border market trade"],
+  [/turismo|tur[ií]stic/i, "caribbean beach tourism"],
+  [/banco central|econom|inflaci/i, "economy money coins"],
+  [/cine|pel[ií]cula|festival de cine|actor|actriz|premio|ovaci[oó]n/i, "movie theater cinema"],
+  [/m[uú]sica|artista|concierto|lanzamiento/i, "concert stage lights"],
+  [/desaparici[oó]n|madre|fallecimiento/i, "candle vigil"],
+  [/presidente|abinader|gobierno/i, "government building flag"],
+];
+
+const CATEGORY_FALLBACK: Record<string, string> = {
+  noticias: "Santo Domingo city skyline",
+  politica: "government building flag",
+  deportes: "sports stadium",
+  farandula: "entertainment stage lights",
+};
+
+function buildQuery(titulo: string, categoria: string): string {
+  for (const [re, q] of KEYWORDS) if (re.test(titulo)) return q;
+  return CATEGORY_FALLBACK[categoria] ?? "news";
+}
+
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+async function searchPexels(query: string, page: number) {
+  const r = await fetch(
+    `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=15&page=${page}&orientation=landscape`,
+    { headers: { Authorization: PEXELS_API_KEY! } },
+  );
+  if (!r.ok) throw new Error(`Pexels ${r.status}`);
+  const d = await r.json();
+  return (d.photos ?? []) as { id: number; src: { large: string } }[];
+}
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: corsHeaders });
+
+  try {
+    const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "");
+    const callerClient = createClient(SUPABASE_URL, ANON_KEY, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+    const { data: userData, error: userError } = await callerClient.auth.getUser();
+    if (userError || !userData.user) return json({ error: "No autenticado" }, 401);
+    const { data: editorRow } = await callerClient
+      .from("editors").select("id").eq("id", userData.user.id).maybeSingle();
+    if (!editorRow) return json({ error: "No autorizado" }, 403);
+    if (!PEXELS_API_KEY) return json({ error: "PEXELS_API_KEY no configurada" }, 500);
+
+    const body = await req.json().catch(() => ({}));
+    const forceIds: string[] = Array.isArray(body.force_ids) ? body.force_ids : [];
+    const dryRun = body.dry_run === true;
+
+    const { data: articles, error } = await adminClient
+      .from("articles")
+      .select("id, categoria, titulo_es, imagen_url")
+      .eq("estado", "publicado");
+    if (error) throw error;
+
+    const counts = new Map<string, number>();
+    for (const a of articles ?? []) if (a.imagen_url) counts.set(a.imagen_url, (counts.get(a.imagen_url) ?? 0) + 1);
+    const used = new Set<string>((articles ?? []).map((a) => a.imagen_url).filter(Boolean) as string[]);
+
+    const summary: Record<string, { revisados: number; incorrectas: number; corregidas: number }> = {};
+    const details: unknown[] = [];
+
+    for (const a of articles ?? []) {
+      const s = (summary[a.categoria] ??= { revisados: 0, incorrectas: 0, corregidas: 0 });
+      s.revisados++;
+      const bad = !a.imagen_url || (counts.get(a.imagen_url) ?? 0) > 1 || forceIds.includes(a.id);
+      if (!bad) continue;
+      s.incorrectas++;
+
+      const query = buildQuery(a.titulo_es, a.categoria);
+      let chosen: string | null = null;
+      for (let page = 1; page <= 3 && !chosen; page++) {
+        const photos = await searchPexels(query, page);
+        for (const p of photos) {
+          const url = `https://images.pexels.com/photos/${p.id}/pexels-photo-${p.id}.jpeg?auto=compress&cs=tinysrgb&w=1200`;
+          const key = (u: string) => u.split("?")[0];
+          if (![...used].some((u) => key(u) === key(url))) { chosen = url; break; }
+        }
+      }
+      if (!chosen) { details.push({ id: a.id, titulo: a.titulo_es, query, resultado: "sin resultado" }); continue; }
+
+      if (!dryRun) {
+        const { error: upErr } = await adminClient.from("articles").update({ imagen_url: chosen }).eq("id", a.id);
+        if (upErr) { details.push({ id: a.id, titulo: a.titulo_es, error: upErr.message }); continue; }
+      }
+      used.add(chosen);
+      s.corregidas++;
+      details.push({ id: a.id, titulo: a.titulo_es, query, imagen_url: chosen });
+    }
+
+    return json({ dry_run: dryRun, por_categoria: summary, detalle: details });
+  } catch (err) {
+    return json({ error: err instanceof Error ? err.message : "Error interno" }, 500);
+  }
+});
