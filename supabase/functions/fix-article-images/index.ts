@@ -74,19 +74,20 @@ Deno.serve(async (req: Request) => {
 
   try {
     const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "");
-    const callerClient = createClient(SUPABASE_URL, ANON_KEY, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
-    });
-    const { data: userData, error: userError } = await callerClient.auth.getUser();
+    if (!token) return json({ error: "No autenticado" }, 401);
+    const { data: userData, error: userError } = await adminClient.auth.getUser(token);
     if (userError || !userData.user) return json({ error: "No autenticado" }, 401);
-    const { data: editorRow } = await callerClient
+    const { data: editorRow } = await adminClient
       .from("editors").select("id").eq("id", userData.user.id).maybeSingle();
     if (!editorRow) return json({ error: "No autorizado" }, 403);
     if (!PEXELS_API_KEY) return json({ error: "PEXELS_API_KEY no configurada" }, 500);
 
     const body = await req.json().catch(() => ({}));
     const forceIds: string[] = Array.isArray(body.force_ids) ? body.force_ids : [];
-    const dryRun = body.dry_run === true;
+    const doneIds: string[] = Array.isArray(body.done_ids) ? body.done_ids : [];
+    const batch = Math.min(Number(body.batch) || 6, 10);
+    let processed = 0;
+    let pending = 0;
 
     const { data: articles, error } = await adminClient
       .from("articles")
@@ -100,12 +101,15 @@ Deno.serve(async (req: Request) => {
 
     const summary: Record<string, { revisados: number; incorrectas: number; corregidas: number }> = {};
     const details: unknown[] = [];
+    const doneNow: string[] = [];
 
     for (const a of articles ?? []) {
       const s = (summary[a.categoria] ??= { revisados: 0, incorrectas: 0, corregidas: 0 });
       s.revisados++;
       const bad = !a.imagen_url || (counts.get(a.imagen_url) ?? 0) > 1 || forceIds.includes(a.id);
-      if (!bad) continue;
+      if (!bad || doneIds.includes(a.id)) continue;
+      if (processed >= batch) { pending++; continue; }
+      processed++;
       s.incorrectas++;
 
       const query = buildQuery(a.titulo_es, a.categoria);
@@ -118,18 +122,17 @@ Deno.serve(async (req: Request) => {
           if (![...used].some((u) => key(u) === key(url))) { chosen = url; break; }
         }
       }
-      if (!chosen) { details.push({ id: a.id, titulo: a.titulo_es, query, resultado: "sin resultado" }); continue; }
+      if (!chosen) { details.push({ id: a.id, titulo: a.titulo_es, query, resultado: "sin resultado" }); doneNow.push(a.id); continue; }
 
-      if (!dryRun) {
-        const { error: upErr } = await adminClient.from("articles").update({ imagen_url: chosen }).eq("id", a.id);
-        if (upErr) { details.push({ id: a.id, titulo: a.titulo_es, error: upErr.message }); continue; }
-      }
+      const { error: upErr } = await adminClient.from("articles").update({ imagen_url: chosen }).eq("id", a.id);
+      if (upErr) { details.push({ id: a.id, titulo: a.titulo_es, error: upErr.message }); continue; }
       used.add(chosen);
       s.corregidas++;
+      doneNow.push(a.id);
       details.push({ id: a.id, titulo: a.titulo_es, query, imagen_url: chosen });
     }
 
-    return json({ dry_run: dryRun, por_categoria: summary, detalle: details });
+    return json({ por_categoria: summary, detalle: details, hechos: doneNow, pendientes: pending });
   } catch (err) {
     return json({ error: err instanceof Error ? err.message : "Error interno" }, 500);
   }

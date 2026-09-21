@@ -34,18 +34,30 @@ export default function AdminDashboard() {
     setFixResult(null);
     try {
       const { data: sessionData } = await supabase.auth.getSession();
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fix-article-images`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${sessionData.session?.access_token}`,
-        },
-        body: JSON.stringify({ force_ids: WRONG_IMAGE_IDS }),
-      });
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.error || `Error ${res.status}`);
+      const total: Record<string, { revisados: number; incorrectas: number; corregidas: number }> = {};
+      const done: string[] = [];
+      for (let i = 0; i < 20; i++) {
+        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fix-article-images`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${sessionData.session?.access_token}`,
+          },
+          body: JSON.stringify({ force_ids: WRONG_IMAGE_IDS, done_ids: done, batch: 6 }),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body.error || `Error ${res.status}`);
+        for (const [cat, r] of Object.entries(body.por_categoria ?? {}) as [string, { revisados: number; incorrectas: number; corregidas: number }][]) {
+          const t = (total[cat] ??= { revisados: r.revisados, incorrectas: 0, corregidas: 0 });
+          t.incorrectas += r.incorrectas;
+          t.corregidas += r.corregidas;
+        }
+        done.push(...(body.hechos ?? []));
+        setFixResult(`Procesando... ${done.length} artículos hechos`);
+        if (!body.pendientes) break;
+      }
       const lines = CATEGORIAS.map((c) => {
-        const r = body.por_categoria?.[c.value];
+        const r = total[c.value];
         return r ? `${c.label}: ${r.incorrectas} incorrectas, ${r.corregidas} corregidas (de ${r.revisados})` : `${c.label}: 0`;
       });
       setFixResult(lines.join(' · '));
