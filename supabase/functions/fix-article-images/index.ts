@@ -29,8 +29,8 @@ const KEYWORDS: [RegExp, string][] = [
   [/banda|drogaba|robo|arrest|desmantel|polic[ií]a/i, "police officers"],
   [/adolescent|hogares|menores/i, "teenager silhouette"],
   [/tribunal|scj|indemnizaci[oó]n|justicia|juez/i, "courthouse justice gavel"],
-  [/congreso|ley|reforma|decreto|senado|diputado/i, "parliament legislative chamber"],
   [/educaci[oó]n|escuela|rural/i, "school classroom students"],
+  [/congreso|ley|reforma|decreto|senado|diputado/i, "parliament legislative chamber"],
   [/contaminaci[oó]n|salud|suicidio/i, "air pollution city smog"],
   [/frontera|dajab[oó]n|haiti|comercio/i, "border market trade"],
   [/turismo|tur[ií]stic/i, "caribbean beach tourism"],
@@ -77,6 +77,11 @@ async function fetchSourceImage(pageUrl: string | null | undefined): Promise<str
     }
   } catch (_e) { /* sin imagen de origen: se usa Pexels */ }
   return null;
+}
+
+// La página de inicio de un medio no es la noticia: su og:image es el logo o una portada genérica.
+function isHomepage(u: string | null | undefined): boolean {
+  try { return !u || new URL(u).pathname.replace(/\/+$/, "") === ""; } catch { return true; }
 }
 
 const json = (body: unknown, status = 200) =>
@@ -138,10 +143,12 @@ Deno.serve(async (req: Request) => {
       doneNow.push(a.id);
 
       // 1) Imagen original de la noticia, si la fuente tiene una.
-      const src = await fetchSourceImage(a.fuente_url);
-      if (src && src !== a.imagen_url) {
+      const homepage = isHomepage(a.fuente_url);
+      const src = homepage ? null : await fetchSourceImage(a.fuente_url);
+      if (src && src !== a.imagen_url && !used.has(src)) {
         const { error: srcErr } = await adminClient.from("articles").update({ imagen_url: src }).eq("id", a.id);
         if (!srcErr) {
+          used.add(src);
           s.incorrectas++; s.corregidas++;
           details.push({ id: a.id, titulo: a.titulo_es, origen: "fuente", imagen_url: src });
           continue;
@@ -150,7 +157,10 @@ Deno.serve(async (req: Request) => {
       if (src && src === a.imagen_url) continue;
 
       // 2) Sin imagen de origen: Pexels solo si falta, está repetida o se marcó a mano.
-      const bad = !a.imagen_url || (counts.get(a.imagen_url) ?? 0) > 1 || forceIds.includes(a.id);
+      const isPexels = (a.imagen_url ?? "").includes("images.pexels.com");
+      // Sin fuente real (solo la portada del medio), la imagen del sitio es un logo: se reemplaza.
+      const bad = !a.imagen_url || (counts.get(a.imagen_url) ?? 0) > 1 || forceIds.includes(a.id) ||
+        (homepage && !isPexels);
       if (!bad) continue;
       s.incorrectas++;
 
