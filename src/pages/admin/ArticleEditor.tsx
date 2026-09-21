@@ -66,29 +66,53 @@ export default function ArticleEditor() {
     setArticle((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Redimensiona (máx. 1600 px) y convierte a JPEG en el navegador: acepta fotos
+  // grandes o en formatos como HEIC (iPhone) y evita el límite de 5 MB del bucket.
+  const prepareImage = (file: File): Promise<Blob> =>
+    new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const scale = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.naturalWidth * scale);
+        canvas.height = Math.round(img.naturalHeight * scale);
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return reject(new Error('El navegador no pudo procesar la imagen.'));
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(
+          (blob) => (blob ? resolve(blob) : reject(new Error('No se pudo convertir la imagen.'))),
+          'image/jpeg',
+          0.85,
+        );
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('No se pudo leer la imagen. Prueba con un archivo JPG o PNG.'));
+      };
+      img.src = url;
+    });
+
   const handleUploadImage = async (file: File) => {
     setImageError(null);
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      setImageError('Formato no válido. Usa JPG, PNG o WebP.');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setImageError('La imagen supera 5 MB.');
-      return;
-    }
     setUploading(true);
-    const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
-    const path = `${crypto.randomUUID()}.${ext}`;
-    const { error: upErr } = await supabase.storage
-      .from('article-images')
-      .upload(path, file, { contentType: file.type, cacheControl: '31536000' });
-    setUploading(false);
-    if (upErr) {
-      setImageError(`No se pudo subir la imagen: ${upErr.message}`);
-      return;
+    try {
+      const blob = await prepareImage(file);
+      const path = `${crypto.randomUUID()}.jpg`;
+      const { error: upErr } = await supabase.storage
+        .from('article-images')
+        .upload(path, blob, { contentType: 'image/jpeg', cacheControl: '31536000' });
+      if (upErr) throw new Error(upErr.message);
+      const { data } = supabase.storage.from('article-images').getPublicUrl(path);
+      update('imagen_url', data.publicUrl);
+    } catch (err) {
+      setImageError(`No se pudo subir la imagen: ${err instanceof Error ? err.message : 'error desconocido'}`);
+    } finally {
+      setUploading(false);
     }
-    const { data } = supabase.storage.from('article-images').getPublicUrl(path);
-    update('imagen_url', data.publicUrl);
   };
 
   const handleSave = async (newEstado?: EstadoArticulo) => {
@@ -450,10 +474,10 @@ export default function ArticleEditor() {
               </div>
               <label className="flex items-center justify-center gap-2 w-full mb-2 px-3 py-2 border border-dashed border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors">
                 {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                {uploading ? 'Subiendo...' : 'Subir imagen propia (JPG, PNG, WebP, máx. 5 MB)'}
+                {uploading ? 'Subiendo...' : 'Subir imagen propia (JPG, PNG, WebP, HEIC)'}
                 <input
                   type="file"
-                  accept="image/jpeg,image/png,image/webp"
+                  accept="image/*"
                   disabled={uploading}
                   className="sr-only"
                   onChange={(e) => {
@@ -463,7 +487,7 @@ export default function ArticleEditor() {
                   }}
                 />
               </label>
-              {imageError && !showImageSearch && <p className="text-xs text-red-600 mb-1">{imageError}</p>}
+              {imageError && <p className="text-xs text-red-600 mb-1" role="alert">{imageError}</p>}
               <input
                 type="url"
                 value={article.imagen_url ?? ''}
