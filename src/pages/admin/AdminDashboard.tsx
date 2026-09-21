@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FileEdit, CheckCircle, XCircle, Globe, TrendingUp, Clock, ArrowRight, Zap, AlertTriangle, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { CATEGORIAS, getEstadoColor, getEstadoLabel } from '@/lib/types';
-import type { Article, Categoria, EstadoArticulo } from '@/lib/types';
+import type { Article } from '@/lib/types';
 
 interface CronRunLog {
   id: number;
@@ -18,7 +18,6 @@ import { tiempoRelativo } from '@/lib/format';
 export default function AdminDashboard() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [cronLogs, setCronLogs] = useState<CronRunLog[]>([]);
-  const [loading, setLoading] = useState(true);
   const [fixing, setFixing] = useState(false);
   const [fixResult, setFixResult] = useState<string | null>(null);
 
@@ -76,7 +75,6 @@ export default function AdminDashboard() {
       .limit(50)
       .then(({ data }) => {
         setArticles(data as Article[] ?? []);
-        setLoading(false);
       });
 
     supabase

@@ -10,7 +10,7 @@ export function formatFecha(fecha: string | null): string {
   });
 }
 
-export function formatFechaCorta(fecha: string | null): string {
+function formatFechaCorta(fecha: string | null): string {
   if (!fecha) return '';
   const date = new Date(fecha);
   return date.toLocaleDateString('es-DO', {
@@ -33,14 +33,4 @@ export function tiempoRelativo(fecha: string | null): string {
   const dias = Math.floor(horas / 24);
   if (dias < 7) return `Hace ${dias}d`;
   return formatFechaCorta(fecha);
-}
-
-export function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
-    .substring(0, 80);
 }

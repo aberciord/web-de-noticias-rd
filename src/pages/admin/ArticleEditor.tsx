@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Save, CheckCircle, XCircle, Globe, ArrowLeft, Sparkles, AlertCircle, Eye, Image as ImageIcon, Loader2, Upload } from 'lucide-react';
+import { Save, XCircle, Globe, ArrowLeft, Sparkles, AlertCircle, Eye, Image as ImageIcon, Loader2, Upload } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { CATEGORIAS, ESTADOS, getEstadoColor, getEstadoLabel } from '@/lib/types';
-import type { Article, Categoria, EstadoArticulo } from '@/lib/types';
+import type { Article, EstadoArticulo } from '@/lib/types';
 import { useAuth } from '@/context/AuthContext';
 
 interface PexelsResult {

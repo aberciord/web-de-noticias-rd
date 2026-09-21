@@ -18,19 +18,6 @@ export interface Source {
   creado_en: string;
 }
 
-export interface RawItem {
-  id: string;
-  source_id: string | null;
-  categoria: Categoria;
-  titulo_original: string;
-  resumen_original: string | null;
-  url_original: string;
-  fecha_publicacion: string | null;
-  fecha_recoleccion: string;
-  procesado: boolean;
-  seleccionado: boolean;
-}
-
 export interface Article {
   id: string;
   raw_item_id: string | null;

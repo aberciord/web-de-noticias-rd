@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MessageCircle, Trash2, Search, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { CATEGORIAS, getCategoriaLabel } from '@/lib/types';
+import { getCategoriaLabel } from '@/lib/types';
 import type { Comment, Article } from '@/lib/types';
 import { tiempoRelativo } from '@/lib/format';
 

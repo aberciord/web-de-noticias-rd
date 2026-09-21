@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Clock, ExternalLink, Share2, ChevronLeft, ChevronRight, User } from 'lucide-react';
+import { ArrowLeft, Clock, ExternalLink, Share2, ChevronLeft, User } from 'lucide-react';
 import { getCategoriaLabel } from '@/lib/types';
 import type { Article, Banner } from '@/lib/types';
 import { formatFecha, tiempoRelativo } from '@/lib/format';
