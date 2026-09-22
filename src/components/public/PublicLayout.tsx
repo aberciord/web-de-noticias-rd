@@ -9,6 +9,16 @@ import NewsletterSignup from '@/components/public/NewsletterSignup';
 import WeatherWidget from '@/components/public/WeatherWidget';
 import type { Banner } from '@/lib/types';
 
+// Telegram no tiene ícono propio en lucide-react: se dibuja el avión de papel
+// de su logo como SVG, al mismo trazo (stroke) que los demás íconos.
+function TelegramIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M21 4 3 11.5l6 2m12-9.5-3.5 16-8.5-6.5m12-9.5-8.5 9.5" />
+    </svg>
+  );
+}
+
 interface PublicLayoutProps {
   children: React.ReactNode;
 }
@@ -128,6 +138,15 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                 className="w-7 h-7 flex items-center justify-center rounded-full bg-slate-950 text-white hover:bg-slate-800 hover:scale-110 transition-all"
               >
                 <XIcon className="w-3.5 h-3.5" />
+              </a>
+              <a
+                href={SOCIAL_LINKS.telegram}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={language === 'en' ? 'Follow us on Telegram' : 'Síguenos en Telegram'}
+                className="w-7 h-7 flex items-center justify-center rounded-full bg-sky-500 text-white hover:bg-sky-400 hover:scale-110 transition-all"
+              >
+                <TelegramIcon className="w-4 h-4" />
               </a>
             </div>
             <button
@@ -328,6 +347,15 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                   className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
                 >
                   <XIcon className="w-4 h-4" />
+                </a>
+                <a
+                  href={SOCIAL_LINKS.telegram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Telegram"
+                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                >
+                  <TelegramIcon className="w-4 h-4" />
                 </a>
                 <a
                   href={SOCIAL_LINKS.whatsapp}

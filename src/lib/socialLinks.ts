@@ -6,6 +6,7 @@ export const SOCIAL_LINKS = {
   instagram: 'https://www.instagram.com/poderdelpueblord/',
   facebook: 'https://facebook.com/elpoderdelpueblord',
   x: 'https://x.com/elpoderpueblord',
+  telegram: 'https://t.me/el_poder_del_pueblo_rd',
   email: 'elpoderdelpueblord@gmail.com',
   whatsapp: 'https://wa.me/18495393001',
   whatsappDisplay: '+1 849-539-3001',
