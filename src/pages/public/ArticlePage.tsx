@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Clock, ExternalLink, Share2, ChevronLeft, User } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, Clock, ExternalLink, Share2, ChevronLeft, User, Link2, Check } from 'lucide-react';
 import { getCategoriaLabel } from '@/lib/types';
 import type { Article, Banner } from '@/lib/types';
 import { formatFecha, tiempoRelativo } from '@/lib/format';
@@ -11,6 +11,16 @@ import { pexelsResize } from '@/lib/imageOptimize';
 import ArticleCard from '@/components/public/ArticleCard';
 import CommentSection from '@/components/public/CommentSection';
 
+// Ícono de WhatsApp: lucide-react no tiene el logo de la marca, así que se
+// dibuja como SVG propio, al mismo trazo (stroke) que los demás íconos.
+function WhatsAppIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91.01-5.47-4.44-9.92-9.9-9.92Zm0 18.15h-.01c-1.48 0-2.94-.4-4.21-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.21 8.21 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.83c0 4.55-3.7 8.23-8.22 8.23Zm4.52-6.16c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.13-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.48-1.39-1.73-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.44-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.42-.14-.01-.31-.01-.48-.01-.17 0-.44.06-.67.31-.23.25-.87.85-.87 2.08 0 1.22.89 2.41 1.02 2.58.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.55.1.47-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.16-.48-.28Z" />
+    </svg>
+  );
+}
+
 interface ArticlePageProps {
   articles: Article[];
 }
@@ -18,6 +28,20 @@ interface ArticlePageProps {
 export default function ArticlePage({ articles }: ArticlePageProps) {
   const { id } = useParams<{ id: string }>();
   const { language, setLanguage } = useLanguage();
+  const [shareOpen, setShareOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const shareRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!shareOpen) return;
+    const onClickOutside = (e: MouseEvent) => {
+      if (shareRef.current && !shareRef.current.contains(e.target as Node)) {
+        setShareOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, [shareOpen]);
   const [sidebarBanner, setSidebarBanner] = useState<Banner | null>(null);
   const [midBanner, setMidBanner] = useState<Banner | null>(null);
 
@@ -209,18 +233,43 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
           )}
 
           {/* Share */}
-          <div className="mt-6 flex items-center gap-3">
-            <span className="text-sm text-slate-500 flex items-center gap-1">
-              <Share2 className="w-4 h-4" /> {language === 'en' ? 'Share:' : 'Compartir:'}
-            </span>
+          <div className="mt-6 relative" ref={shareRef}>
             <button
-              onClick={() => {
-                navigator.clipboard?.writeText(window.location.href);
-              }}
-              className="text-sm text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors"
+              onClick={() => setShareOpen((v) => !v)}
+              aria-expanded={shareOpen}
+              aria-haspopup="true"
+              className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors"
             >
-              {language === 'en' ? 'Copy link' : 'Copiar enlace'}
+              <Share2 className="w-4 h-4" /> {language === 'en' ? 'Share' : 'Compartir'}
             </button>
+
+            {shareOpen && (
+              <div className="absolute z-10 mt-2 w-56 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden">
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(`${titulo} ${window.location.href}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setShareOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  <WhatsAppIcon className="w-4 h-4 text-emerald-600" />
+                  WhatsApp
+                </a>
+                <button
+                  onClick={() => {
+                    navigator.clipboard?.writeText(window.location.href);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left border-t border-slate-100"
+                >
+                  {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Link2 className="w-4 h-4 text-slate-500" />}
+                  {copied
+                    ? (language === 'en' ? 'Copied!' : '¡Copiado!')
+                    : (language === 'en' ? 'Copy link' : 'Copiar enlace')}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Comments */}
