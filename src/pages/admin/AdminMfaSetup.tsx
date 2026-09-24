@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, ShieldAlert, AlertCircle, Loader2, Trash2 } from 'lucide-react';
-import DOMPurify from 'dompurify';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 
@@ -34,9 +33,7 @@ export default function AdminMfaSetup() {
 
       const { data, error: enrollError } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
       if (enrollError) throw new Error(enrollError.message);
-      // El QR lo genera Supabase, no el usuario, pero se sanea igual antes
-      // de insertarlo como HTML por si acaso (defensa en profundidad).
-      setQrCode(DOMPurify.sanitize(data.totp.qr_code, { USE_PROFILES: { svg: true } }));
+      setQrCode(data.totp.qr_code);
       setSecret(data.totp.secret);
       setFactorId(data.id);
     } catch (err) {
@@ -152,11 +149,7 @@ export default function AdminMfaSetup() {
                 <p className="text-sm text-slate-500 mb-3">
                   Ábrelo con Google Authenticator, Authy o similar.
                 </p>
-                <div
-                  className="w-48 h-48 mx-auto"
-                  // El QR viene como SVG desde Supabase; se inserta directo.
-                  dangerouslySetInnerHTML={{ __html: qrCode }}
-                />
+                <img src={qrCode} alt="Código QR para activar la verificación en dos pasos" className="w-48 h-48 mx-auto" />
                 {secret && (
                   <p className="text-xs text-slate-400 text-center mt-3 break-all">
                     ¿No puedes escanear? Código manual: <span className="font-mono">{secret}</span>
