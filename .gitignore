@@ -28,9 +28,16 @@ banner_poder_del_pueblo_RD_final_1248x208.PNG
 IMG_1350.PNG
 ChatGPT Image *.png
 Gemini_Generated_Image_*.jpeg
+banner-anunciate-*.png
 
-# Local Netlify folder
+# Local Netlify folder (sitio migrado a Vercel)
 .netlify
 
 # Config local de Claude Code
 .claude/
+
+# Scaffold original de Bolt.new (proyecto ya no usa Bolt)
+.bolt/
+
+# Cache local del CLI de Supabase
+supabase/.temp/
