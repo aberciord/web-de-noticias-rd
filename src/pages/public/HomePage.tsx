@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { CATEGORIAS } from '@/lib/types';
-import type { Article, Categoria } from '@/lib/types';
+import type { ArticleListItem, Categoria } from '@/lib/types';
 import ArticleCard from '@/components/public/ArticleCard';
 import YoutubeLiveSection from '@/components/public/YoutubeLiveSection';
 import { tiempoRelativo } from '@/lib/format';
@@ -9,7 +9,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { pexelsResize } from '@/lib/imageOptimize';
 
 interface HomePageProps {
-  articles: Article[];
+  articles: ArticleListItem[];
 }
 
 export default function HomePage({ articles }: HomePageProps) {
@@ -128,7 +128,7 @@ export default function HomePage({ articles }: HomePageProps) {
   );
 }
 
-function CategorySection({ categoria, articles }: { categoria: Categoria; articles: Article[] }) {
+function CategorySection({ categoria, articles }: { categoria: Categoria; articles: ArticleListItem[] }) {
   const { language } = useLanguage();
   const cat = CATEGORIAS.find((c) => c.value === categoria)!;
   const main = articles[0];

@@ -7,9 +7,25 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      rel="stylesheet"
+      rel="preload"
+      as="style"
       href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&family=Space+Grotesk:wght@400;500;600;700&display=swap"
     />
+    <!-- media="print" evita que bloquee el primer render; font-loader.js la
+         activa (media="all") en cuanto termina de bajar, sin FOIT. -->
+    <link
+      id="gfonts-css"
+      rel="stylesheet"
+      media="print"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+    />
+    <script src="/font-loader.js"></script>
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      />
+    </noscript>
     <meta
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' https://xhfqkhzyoonihxxkwrki.supabase.co wss://xhfqkhzyoonihxxkwrki.supabase.co https://api.open-meteo.com https://www.google-analytics.com https://www.googletagmanager.com; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self';"

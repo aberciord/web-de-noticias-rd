@@ -10,7 +10,7 @@ import PrivacyPolicyPage from '@/pages/public/PrivacyPolicyPage';
 import TermsOfUsePage from '@/pages/public/TermsOfUsePage';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { Article } from '@/lib/types';
+import type { ArticleListItem } from '@/lib/types';
 
 // El panel de administración se carga aparte (code-splitting): los
 // visitantes del sitio público nunca descargan este JS.
@@ -75,18 +75,24 @@ function RequireMfa({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// Sin cuerpo_es/cuerpo_en: el listado (home, categorías, relacionados) no
+// los necesita, y son la parte más pesada de cada fila. ArticlePage pide el
+// cuerpo del artículo abierto aparte, en un fetch propio y liviano.
+const LIST_COLUMNS =
+  'id, raw_item_id, categoria, titulo_es, titulo_en, resumen_seo, fuente_nombre, fuente_url, imagen_url, autor, estado, creado_en, publicado_en';
+
 function PublicSite() {
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [articles, setArticles] = useState<ArticleListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     supabase
       .from('articles')
-      .select('*')
+      .select(LIST_COLUMNS)
       .eq('estado', 'publicado')
       .order('publicado_en', { ascending: false })
       .then(({ data }) => {
-        setArticles(data as Article[] ?? []);
+        setArticles(data as ArticleListItem[] ?? []);
         setLoading(false);
       });
   }, []);

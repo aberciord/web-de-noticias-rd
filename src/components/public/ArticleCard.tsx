@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom';
 import { Clock } from 'lucide-react';
-import type { Article } from '@/lib/types';
+import type { ArticleListItem } from '@/lib/types';
 import { getCategoriaLabel } from '@/lib/types';
 import { tiempoRelativo } from '@/lib/format';
 import { useLanguage } from '@/context/LanguageContext';
 import { pexelsResize } from '@/lib/imageOptimize';
 
 interface ArticleCardProps {
-  article: Article;
+  article: ArticleListItem;
   variant?: 'default' | 'horizontal' | 'compact';
 }
 

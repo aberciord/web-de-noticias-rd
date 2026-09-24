@@ -2,7 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Clock, ExternalLink, Share2, ChevronLeft, User, Link2, Check } from 'lucide-react';
 import { getCategoriaLabel } from '@/lib/types';
-import type { Article, Banner } from '@/lib/types';
+import type { ArticleListItem, Banner } from '@/lib/types';
 import { formatFecha, tiempoRelativo } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/context/LanguageContext';
@@ -23,7 +23,7 @@ function WhatsAppIcon({ className }: { className?: string }) {
 }
 
 interface ArticlePageProps {
-  articles: Article[];
+  articles: ArticleListItem[];
 }
 
 export default function ArticlePage({ articles }: ArticlePageProps) {
@@ -44,9 +44,31 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
     return () => document.removeEventListener('mousedown', onClickOutside);
   }, [shareOpen]);
   const [sidebarBanner, setSidebarBanner] = useState<Banner | null>(null);
+  const [sidebarBannerLoading, setSidebarBannerLoading] = useState(true);
   const [midBanner, setMidBanner] = useState<Banner | null>(null);
+  const [midBannerLoading, setMidBannerLoading] = useState(true);
+  const [cuerpo_es, setCuerpoEs] = useState<string | null>(null);
+  const [cuerpo_en, setCuerpoEn] = useState<string | null>(null);
 
   const article = articles.find((a) => a.id === id);
+
+  // El listado (prop `articles`) no trae el cuerpo del artículo — se pide
+  // aparte, solo para el que está abierto, para no cargar el texto de los
+  // ~100 artículos publicados en cada visita a home/categoría/artículo.
+  useEffect(() => {
+    setCuerpoEs(null);
+    setCuerpoEn(null);
+    if (!id) return;
+    supabase
+      .from('articles')
+      .select('cuerpo_es, cuerpo_en')
+      .eq('id', id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setCuerpoEs(data?.cuerpo_es ?? '');
+        setCuerpoEn(data?.cuerpo_en ?? '');
+      });
+  }, [id]);
 
   useDocumentMeta({
     title: article
@@ -76,6 +98,9 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
   });
 
   useEffect(() => {
+    setSidebarBannerLoading(true);
+    setMidBannerLoading(true);
+
     supabase
       .from('banners')
       .select('*')
@@ -84,7 +109,10 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
       .order('creado_en', { ascending: false })
       .limit(1)
       .maybeSingle()
-      .then(({ data }) => setSidebarBanner(data as Banner | null));
+      .then(({ data }) => {
+        setSidebarBanner(data as Banner | null);
+        setSidebarBannerLoading(false);
+      });
 
     supabase
       .from('banners')
@@ -94,7 +122,10 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
       .order('creado_en', { ascending: false })
       .limit(1)
       .maybeSingle()
-      .then(({ data }) => setMidBanner(data as Banner | null));
+      .then(({ data }) => {
+        setMidBanner(data as Banner | null);
+        setMidBannerLoading(false);
+      });
   }, [id]);
 
   if (!article) {
@@ -113,10 +144,10 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
     .slice(0, 3);
 
   const titulo = language === 'es' ? article.titulo_es : article.titulo_en;
-  const cuerpo = language === 'es' ? article.cuerpo_es : article.cuerpo_en;
+  const cuerpo = language === 'es' ? cuerpo_es : cuerpo_en;
   const fuenteLabel = language === 'es' ? 'Fuente' : 'Source';
 
-  const paragraphs = cuerpo.split('\n').filter((p) => p.trim());
+  const paragraphs = cuerpo ? cuerpo.split('\n').filter((p) => p.trim()) : [];
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -196,8 +227,15 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
             </div>
           )}
 
-          {/* Mid-article banner */}
-          {midBanner && (
+          {/* Mid-article banner — se reserva el mismo espacio mientras se
+              confirma si hay banner, para no correr el resto del artículo
+              hacia abajo cuando llegue (CLS). */}
+          {midBannerLoading && (
+            <div className="my-6 rounded-lg overflow-hidden">
+              <div className="w-full aspect-[2/1] rounded-lg bg-slate-100 animate-pulse" />
+            </div>
+          )}
+          {!midBannerLoading && midBanner && (
             <div className="my-6 rounded-lg overflow-hidden">
               <a href={safeHref(midBanner.link)} target="_blank" rel="noopener noreferrer">
                 <img src={midBanner.imagen_url} alt={midBanner.titulo ?? 'Publicidad'} loading="lazy" className="w-full h-auto" />
@@ -206,11 +244,21 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
           )}
 
           <div className="prose prose-lg max-w-none">
-            {paragraphs.map((para, i) => (
-              <p key={i} className="text-slate-700 leading-relaxed text-base sm:text-lg mb-4">
-                {para}
-              </p>
-            ))}
+            {cuerpo === null ? (
+              <div className="space-y-3 animate-pulse" aria-hidden="true">
+                <div className="h-4 bg-slate-100 rounded w-full" />
+                <div className="h-4 bg-slate-100 rounded w-full" />
+                <div className="h-4 bg-slate-100 rounded w-5/6" />
+                <div className="h-4 bg-slate-100 rounded w-full" />
+                <div className="h-4 bg-slate-100 rounded w-2/3" />
+              </div>
+            ) : (
+              paragraphs.map((para, i) => (
+                <p key={i} className="text-slate-700 leading-relaxed text-base sm:text-lg mb-4">
+                  {para}
+                </p>
+              ))
+            )}
           </div>
 
           {/* Source citation — siempre al final del cuerpo, en letra pequeña */}
@@ -297,7 +345,12 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
 
         {/* Sidebar */}
         <aside className="lg:col-span-1 space-y-6">
-          {sidebarBanner && (
+          {sidebarBannerLoading && (
+            <div className="rounded-lg overflow-hidden">
+              <div className="w-full aspect-square rounded-lg bg-slate-100 animate-pulse" />
+            </div>
+          )}
+          {!sidebarBannerLoading && sidebarBanner && (
             <div className="rounded-lg overflow-hidden">
               <a href={safeHref(sidebarBanner.link)} target="_blank" rel="noopener noreferrer">
                 <img src={sidebarBanner.imagen_url} alt={sidebarBanner.titulo ?? 'Publicidad'} loading="lazy" className="w-full" />

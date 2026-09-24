@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { CATEGORIAS } from '@/lib/types';
-import type { Article } from '@/lib/types';
+import type { ArticleListItem } from '@/lib/types';
 import ArticleCard from '@/components/public/ArticleCard';
 import { useLanguage } from '@/context/LanguageContext';
 import { useDocumentMeta } from '@/lib/useDocumentMeta';
 
 interface CategoryPageProps {
-  articles: Article[];
+  articles: ArticleListItem[];
 }
 
 const PAGE_SIZE = 12;

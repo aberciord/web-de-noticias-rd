@@ -36,6 +36,12 @@ export interface Article {
   publicado_en: string | null;
 }
 
+// El sitio público (home, categoría, relacionados) nunca necesita el cuerpo
+// completo del artículo — solo ArticlePage, para el artículo abierto. Pedir
+// cuerpo_es/cuerpo_en en el listado infla el payload inicial sin necesidad
+// (ver ArticleListItem en uso: App.tsx, HomePage, CategoryPage, ArticleCard).
+export type ArticleListItem = Omit<Article, 'cuerpo_es' | 'cuerpo_en'>;
+
 export interface Banner {
   id: string;
   posicion: PosicionBanner;
