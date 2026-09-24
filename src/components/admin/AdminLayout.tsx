@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, FileEdit, PlusCircle, Rss, Image, LogOut, ExternalLink, MessageCircle, Users } from 'lucide-react';
+import { LayoutDashboard, FileEdit, PlusCircle, Rss, Image, LogOut, ExternalLink, MessageCircle, Users, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 interface AdminLayoutProps {
@@ -14,6 +14,7 @@ const navItems = [
   { to: '/panel-8f3k2qx9/banners', label: 'Banners', icon: Image },
   { to: '/panel-8f3k2qx9/comentarios', label: 'Comentarios', icon: MessageCircle },
   { to: '/panel-8f3k2qx9/editores', label: 'Editores', icon: Users },
+  { to: '/panel-8f3k2qx9/seguridad', label: 'Seguridad (2FA)', icon: ShieldCheck },
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {

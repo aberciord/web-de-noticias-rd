@@ -1,20 +1,36 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, AlertCircle, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 
-type Mode = 'signin' | 'forgot_email' | 'forgot_questions' | 'forgot_done';
+type Mode = 'signin' | 'mfa_verify' | 'forgot_email' | 'forgot_questions' | 'forgot_done';
 
 export default function AdminLogin() {
-  const { signIn, user, loading: authLoading } = useAuth();
+  const { signIn, user, loading: authLoading, aal, mfaLoading, refreshMfa } = useAuth();
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>('signin');
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
+  const [mfaCode, setMfaCode] = useState('');
 
   useEffect(() => {
-    if (!authLoading && user) {
-      navigate('/panel-8f3k2qx9/dashboard');
+    if (authLoading || mfaLoading || !user) return;
+    // Si ya inició sesión pero le falta subir a aal2 (tiene 2FA activo y aún
+    // no lo verificó en esta sesión), se le pide el código antes de entrar.
+    if (aal && aal.next === 'aal2' && aal.current !== 'aal2') {
+      if (mode !== 'mfa_verify') {
+        supabase.auth.mfa.listFactors().then(({ data }) => {
+          const factor = data?.totp.find((f) => f.status === 'verified');
+          if (factor) {
+            setMfaFactorId(factor.id);
+            setMode('mfa_verify');
+          }
+        });
+      }
+      return;
     }
-  }, [authLoading, user, navigate]);
+    navigate('/panel-8f3k2qx9/dashboard');
+  }, [authLoading, mfaLoading, user, aal, mode, navigate]);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -48,11 +64,33 @@ export default function AdminLogin() {
 
     setLoading(false);
 
+    // Si necesita 2FA, el efecto de arriba lo manda a mfa_verify; si no,
+    // lo manda directo al dashboard. Aquí solo se muestra el error, si hubo.
     if (result.error) {
       setError(result.error);
-    } else {
-      navigate('/panel-8f3k2qx9/dashboard');
     }
+  };
+
+  const handleVerifyMfa = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!mfaFactorId || mfaCode.trim().length !== 6) {
+      setError('Escribe el código de 6 dígitos de tu app authenticator.');
+      return;
+    }
+    setError(null);
+    setLoading(true);
+    const { error: verifyError } = await supabase.auth.mfa.challengeAndVerify({
+      factorId: mfaFactorId,
+      code: mfaCode.trim(),
+    });
+    setLoading(false);
+    if (verifyError) {
+      setError('Código incorrecto. Verifica e intenta de nuevo.');
+      setMfaCode('');
+      return;
+    }
+    await refreshMfa();
+    navigate('/panel-8f3k2qx9/dashboard');
   };
 
   const handleGetQuestions = async (e: React.FormEvent) => {
@@ -176,6 +214,43 @@ export default function AdminLogin() {
                 className="w-full bg-slate-900 text-white font-semibold py-3 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
               >
                 {loading ? 'Procesando...' : 'Iniciar sesión'}
+              </button>
+            </form>
+          )}
+
+          {mode === 'mfa_verify' && (
+            <form onSubmit={handleVerifyMfa} className="space-y-4">
+              <div className="flex items-center gap-2 text-slate-900">
+                <ShieldCheck className="w-5 h-5" />
+                <h2 className="font-bold">Verificación en dos pasos</h2>
+              </div>
+              <p className="text-sm text-slate-500">
+                Escribe el código de 6 dígitos de tu app authenticator.
+              </p>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoFocus
+                maxLength={6}
+                value={mfaCode}
+                onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
+                placeholder="000000"
+                className="w-full text-center text-2xl tracking-widest font-mono px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none"
+              />
+
+              {error && (
+                <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading || mfaCode.length !== 6}
+                className="w-full bg-slate-900 text-white font-semibold py-3 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Verificando...' : 'Verificar'}
               </button>
             </form>
           )}

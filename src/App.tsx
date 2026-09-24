@@ -23,13 +23,14 @@ const SourcesManager = lazy(() => import('@/pages/admin/SourcesManager'));
 const BannersManager = lazy(() => import('@/pages/admin/BannersManager'));
 const CommentsManager = lazy(() => import('@/pages/admin/CommentsManager'));
 const EditorsManager = lazy(() => import('@/pages/admin/EditorsManager'));
+const AdminMfaSetup = lazy(() => import('@/pages/admin/AdminMfaSetup'));
 
 function AdminLoadingFallback() {
   return <div className="min-h-screen flex items-center justify-center text-slate-400">Cargando...</div>;
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, aal, mfaLoading } = useAuth();
   const [checkingEditor, setCheckingEditor] = useState(true);
   const [isEditor, setIsEditor] = useState(false);
 
@@ -51,8 +52,26 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       });
   }, [user]);
 
-  if (loading || checkingEditor) return <div className="min-h-screen flex items-center justify-center text-slate-400">Cargando...</div>;
+  if (loading || checkingEditor || mfaLoading) {
+    return <div className="min-h-screen flex items-center justify-center text-slate-400">Cargando...</div>;
+  }
   if (!user || !isEditor) return <Navigate to="/panel-8f3k2qx9" replace />;
+
+  // Sesión sin subir a aal2 todavía (tiene 2FA activo pero no lo verificó
+  // en esta sesión): de vuelta al login, que se encarga de pedir el código.
+  if (aal && aal.next === 'aal2' && aal.current !== 'aal2') {
+    return <Navigate to="/panel-8f3k2qx9" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+// 2FA obligatorio: envuelve cada página del panel excepto "seguridad" y
+// manda a activar el 2FA si el editor todavía no tiene un factor verificado.
+function RequireMfa({ children }: { children: React.ReactNode }) {
+  const { mfaFactors } = useAuth();
+  const hasVerifiedMfa = mfaFactors.some((f) => f.status === 'verified');
+  if (!hasVerifiedMfa) return <Navigate to="/panel-8f3k2qx9/seguridad" replace />;
   return <>{children}</>;
 }
 
@@ -121,14 +140,15 @@ function App() {
                 <Suspense fallback={<AdminLoadingFallback />}>
                   <AdminLayout>
                     <Routes>
-                      <Route path="dashboard" element={<AdminDashboard />} />
-                      <Route path="revision" element={<ReviewQueue />} />
-                      <Route path="crear" element={<ArticleEditor />} />
-                      <Route path="editar/:id" element={<ArticleEditor />} />
-                      <Route path="fuentes" element={<SourcesManager />} />
-                      <Route path="banners" element={<BannersManager />} />
-                      <Route path="comentarios" element={<CommentsManager />} />
-                      <Route path="editores" element={<EditorsManager />} />
+                      <Route path="seguridad" element={<AdminMfaSetup />} />
+                      <Route path="dashboard" element={<RequireMfa><AdminDashboard /></RequireMfa>} />
+                      <Route path="revision" element={<RequireMfa><ReviewQueue /></RequireMfa>} />
+                      <Route path="crear" element={<RequireMfa><ArticleEditor /></RequireMfa>} />
+                      <Route path="editar/:id" element={<RequireMfa><ArticleEditor /></RequireMfa>} />
+                      <Route path="fuentes" element={<RequireMfa><SourcesManager /></RequireMfa>} />
+                      <Route path="banners" element={<RequireMfa><BannersManager /></RequireMfa>} />
+                      <Route path="comentarios" element={<RequireMfa><CommentsManager /></RequireMfa>} />
+                      <Route path="editores" element={<RequireMfa><EditorsManager /></RequireMfa>} />
                       <Route path="*" element={<Navigate to="/panel-8f3k2qx9/dashboard" replace />} />
                     </Routes>
                   </AdminLayout>
