@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, ShieldAlert, AlertCircle, Loader2, Trash2 } from 'lucide-react';
+import DOMPurify from 'dompurify';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 
@@ -33,7 +34,9 @@ export default function AdminMfaSetup() {
 
       const { data, error: enrollError } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
       if (enrollError) throw new Error(enrollError.message);
-      setQrCode(data.totp.qr_code);
+      // El QR lo genera Supabase, no el usuario, pero se sanea igual antes
+      // de insertarlo como HTML por si acaso (defensa en profundidad).
+      setQrCode(DOMPurify.sanitize(data.totp.qr_code, { USE_PROFILES: { svg: true } }));
       setSecret(data.totp.secret);
       setFactorId(data.id);
     } catch (err) {

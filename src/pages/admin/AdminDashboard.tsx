@@ -15,6 +15,19 @@ interface CronRunLog {
 }
 import { tiempoRelativo } from '@/lib/format';
 
+// Lista literal (no interpolada) para que Tailwind genere estas clases en
+// el build: evita un style="width:...%" inline, que una CSP estricta sin
+// 'unsafe-inline' en style-src bloquearía.
+const WIDTH_CLASSES = [
+  'w-0', 'w-[5%]', 'w-[10%]', 'w-[15%]', 'w-[20%]', 'w-[25%]', 'w-[30%]', 'w-[35%]',
+  'w-[40%]', 'w-[45%]', 'w-1/2', 'w-[55%]', 'w-[60%]', 'w-[65%]', 'w-[70%]', 'w-[75%]',
+  'w-[80%]', 'w-[85%]', 'w-[90%]', 'w-[95%]', 'w-full',
+];
+function barWidthClass(pct: number): string {
+  const bucket = Math.min(20, Math.max(0, Math.round(pct / 5)));
+  return WIDTH_CLASSES[bucket];
+}
+
 export default function AdminDashboard() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [cronLogs, setCronLogs] = useState<CronRunLog[]>([]);
@@ -213,8 +226,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-red-600 rounded-full transition-all duration-500"
-                    style={{ width: `${(counts.publicado ?? 0) > 0 ? (cat.count / counts.publicado) * 100 : 0}%` }}
+                    className={`h-full bg-red-600 rounded-full transition-all duration-500 ${barWidthClass((counts.publicado ?? 0) > 0 ? (cat.count / counts.publicado) * 100 : 0)}`}
                   />
                 </div>
               </div>

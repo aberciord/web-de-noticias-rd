@@ -5,6 +5,7 @@ import { CATEGORIAS } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/context/LanguageContext';
 import { SOCIAL_LINKS } from '@/lib/socialLinks';
+import { safeHref } from '@/lib/safeUrl';
 import NewsletterSignup from '@/components/public/NewsletterSignup';
 import WeatherWidget from '@/components/public/WeatherWidget';
 import type { Banner } from '@/lib/types';
@@ -173,7 +174,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
       {!headerBannerLoading && headerBanner && (
         <div className="bg-slate-100 border-b border-slate-200">
           <div className="max-w-7xl mx-auto px-4 py-3">
-            <a href={headerBanner.link ?? '#'} target="_blank" rel="noopener noreferrer">
+            <a href={safeHref(headerBanner.link)} target="_blank" rel="noopener noreferrer">
               <img
                 src={headerBanner.imagen_url}
                 alt={headerBanner.titulo ?? 'Banner publicitario'}
@@ -287,7 +288,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
       <footer className="bg-brand-blue-dark text-slate-300 mt-12">
         {footerBanner && (
           <div className="max-w-7xl mx-auto px-4 pt-8">
-            <a href={footerBanner.link ?? '#'} target="_blank" rel="noopener noreferrer">
+            <a href={safeHref(footerBanner.link)} target="_blank" rel="noopener noreferrer">
               <img
                 src={footerBanner.imagen_url}
                 alt={footerBanner.titulo ?? 'Banner publicitario'}

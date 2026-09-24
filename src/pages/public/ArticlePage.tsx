@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/context/LanguageContext';
 import { useDocumentMeta } from '@/lib/useDocumentMeta';
 import { pexelsResize } from '@/lib/imageOptimize';
+import { safeHref } from '@/lib/safeUrl';
 import ArticleCard from '@/components/public/ArticleCard';
 import CommentSection from '@/components/public/CommentSection';
 
@@ -198,7 +199,7 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
           {/* Mid-article banner */}
           {midBanner && (
             <div className="my-6 rounded-lg overflow-hidden">
-              <a href={midBanner.link ?? '#'} target="_blank" rel="noopener noreferrer">
+              <a href={safeHref(midBanner.link)} target="_blank" rel="noopener noreferrer">
                 <img src={midBanner.imagen_url} alt={midBanner.titulo ?? 'Publicidad'} loading="lazy" className="w-full h-auto" />
               </a>
             </div>
@@ -218,7 +219,7 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
               <span className="text-xs text-slate-500">{fuenteLabel}:</span>
               {article.fuente_url ? (
                 <a
-                  href={article.fuente_url}
+                  href={safeHref(article.fuente_url)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs font-medium text-red-600 hover:underline flex items-center gap-1"
@@ -298,7 +299,7 @@ export default function ArticlePage({ articles }: ArticlePageProps) {
         <aside className="lg:col-span-1 space-y-6">
           {sidebarBanner && (
             <div className="rounded-lg overflow-hidden">
-              <a href={sidebarBanner.link ?? '#'} target="_blank" rel="noopener noreferrer">
+              <a href={safeHref(sidebarBanner.link)} target="_blank" rel="noopener noreferrer">
                 <img src={sidebarBanner.imagen_url} alt={sidebarBanner.titulo ?? 'Publicidad'} loading="lazy" className="w-full" />
               </a>
             </div>
