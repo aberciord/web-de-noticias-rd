@@ -10,7 +10,7 @@ import PrivacyPolicyPage from '@/pages/public/PrivacyPolicyPage';
 import TermsOfUsePage from '@/pages/public/TermsOfUsePage';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { ArticleListItem } from '@/lib/types';
+import type { ArticleListItem, Poll } from '@/lib/types';
 
 // El panel de administración se carga aparte (code-splitting): los
 // visitantes del sitio público nunca descargan este JS.
@@ -24,6 +24,7 @@ const BannersManager = lazy(() => import('@/pages/admin/BannersManager'));
 const CommentsManager = lazy(() => import('@/pages/admin/CommentsManager'));
 const EditorsManager = lazy(() => import('@/pages/admin/EditorsManager'));
 const AdminMfaSetup = lazy(() => import('@/pages/admin/AdminMfaSetup'));
+const AdminPolls = lazy(() => import('@/pages/admin/AdminPolls'));
 
 function AdminLoadingFallback() {
   return <div className="min-h-screen flex items-center justify-center text-slate-400">Cargando...</div>;
@@ -83,18 +84,34 @@ const LIST_COLUMNS =
 
 function PublicSite() {
   const [articles, setArticles] = useState<ArticleListItem[]>([]);
+  const [poll, setPoll] = useState<Poll | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase
-      .from('articles')
-      .select(LIST_COLUMNS)
-      .eq('estado', 'publicado')
-      .order('publicado_en', { ascending: false })
-      .then(({ data }) => {
-        setArticles(data as ArticleListItem[] ?? []);
-        setLoading(false);
-      });
+    // La encuesta activa se pide junto con los artículos (y no dentro del
+    // widget) para saber antes del primer render de la home si hay que
+    // reservarle espacio o no mostrar nada — sin saltos de layout.
+    const now = new Date().toISOString();
+    Promise.all([
+      supabase
+        .from('articles')
+        .select(LIST_COLUMNS)
+        .eq('estado', 'publicado')
+        .order('publicado_en', { ascending: false }),
+      supabase
+        .from('polls')
+        .select('*')
+        .eq('active', true)
+        .lte('starts_at', now)
+        .gte('ends_at', now)
+        .order('starts_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]).then(([articlesRes, pollRes]) => {
+      setArticles((articlesRes.data as ArticleListItem[]) ?? []);
+      setPoll((pollRes.data as Poll | null) ?? null);
+      setLoading(false);
+    });
   }, []);
 
   if (loading) {
@@ -111,7 +128,7 @@ function PublicSite() {
     <LanguageProvider>
       <PublicLayout>
         <Routes>
-          <Route path="/" element={<HomePage articles={articles} />} />
+          <Route path="/" element={<HomePage articles={articles} poll={poll} />} />
           <Route path="/categoria/:categoria" element={<CategoryPage articles={articles} />} />
           <Route path="/articulo/:id" element={<ArticlePage articles={articles} />} />
           <Route path="/acerca" element={<AboutPage />} />
@@ -155,6 +172,7 @@ function App() {
                       <Route path="banners" element={<RequireMfa><BannersManager /></RequireMfa>} />
                       <Route path="comentarios" element={<RequireMfa><CommentsManager /></RequireMfa>} />
                       <Route path="editores" element={<RequireMfa><EditorsManager /></RequireMfa>} />
+                      <Route path="encuestas" element={<RequireMfa><AdminPolls /></RequireMfa>} />
                       <Route path="*" element={<Navigate to="/panel-8f3k2qx9/dashboard" replace />} />
                     </Routes>
                   </AdminLayout>

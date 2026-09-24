@@ -1,18 +1,20 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { CATEGORIAS } from '@/lib/types';
-import type { ArticleListItem, Categoria } from '@/lib/types';
+import type { ArticleListItem, Categoria, Poll } from '@/lib/types';
 import ArticleCard from '@/components/public/ArticleCard';
 import YoutubeLiveSection from '@/components/public/YoutubeLiveSection';
+import PollWidget from '@/components/public/PollWidget';
 import { tiempoRelativo } from '@/lib/format';
 import { useLanguage } from '@/context/LanguageContext';
 import { pexelsResize } from '@/lib/imageOptimize';
 
 interface HomePageProps {
   articles: ArticleListItem[];
+  poll: Poll | null;
 }
 
-export default function HomePage({ articles }: HomePageProps) {
+export default function HomePage({ articles, poll }: HomePageProps) {
   const { language } = useLanguage();
   const featured = articles[0];
   // "Lo más reciente" solo muestra artículos de la MISMA categoría que el
@@ -93,6 +95,9 @@ export default function HomePage({ articles }: HomePageProps) {
           </div>
         </div>
       </section>
+
+      {/* Encuesta activa (no renderiza nada si no hay una) */}
+      <PollWidget poll={poll} />
 
       {/* Category navigation */}
       <div className="flex flex-wrap gap-2 mb-8 border-b border-slate-200 pb-4">

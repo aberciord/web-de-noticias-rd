@@ -90,3 +90,18 @@ export function getEstadoLabel(value: EstadoArticulo): string {
 export function getEstadoColor(value: EstadoArticulo): string {
   return ESTADOS.find((e) => e.value === value)?.color ?? 'bg-gray-100 text-gray-800 border-gray-200';
 }
+
+export interface Poll {
+  id: string;
+  description: string;
+  option_a_label: string;
+  option_b_label: string;
+  option_c_label: string;
+  starts_at: string;
+  ends_at: string;
+  active: boolean;
+  created_at: string;
+  created_by: string | null;
+}
+
+export type PollOption = 'a' | 'b' | 'c';
