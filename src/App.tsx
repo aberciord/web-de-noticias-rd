@@ -30,8 +30,29 @@ function AdminLoadingFallback() {
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-slate-400">Cargando...</div>;
-  if (!user) return <Navigate to="/panel-8f3k2qx9" replace />;
+  const [checkingEditor, setCheckingEditor] = useState(true);
+  const [isEditor, setIsEditor] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      setIsEditor(false);
+      setCheckingEditor(false);
+      return;
+    }
+    setCheckingEditor(true);
+    supabase
+      .from('editors')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setIsEditor(!!data);
+        setCheckingEditor(false);
+      });
+  }, [user]);
+
+  if (loading || checkingEditor) return <div className="min-h-screen flex items-center justify-center text-slate-400">Cargando...</div>;
+  if (!user || !isEditor) return <Navigate to="/panel-8f3k2qx9" replace />;
   return <>{children}</>;
 }
 

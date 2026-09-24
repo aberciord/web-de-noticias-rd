@@ -25,6 +25,15 @@ interface VerifyAndResetRequest {
 }
 
 const GENERIC_NOT_FOUND = "No encontramos una cuenta con preguntas de seguridad configuradas para ese correo.";
+const RATE_LIMIT_MESSAGE = "Demasiados intentos. Espera unos minutos antes de volver a intentarlo.";
+
+// IP real del visitante: Supabase/Deno Deploy la entrega en x-forwarded-for
+// (la primera de la lista, si hay varias detrás de proxies).
+function getClientIp(req: Request): string {
+  const fwd = req.headers.get("x-forwarded-for");
+  if (fwd) return fwd.split(",")[0].trim();
+  return req.headers.get("cf-connecting-ip") ?? "unknown";
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -38,6 +47,28 @@ Deno.serve(async (req: Request) => {
       return new Response(
         JSON.stringify({ error: "Falta el correo" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Máximo 5 intentos (get_questions o verify_and_reset) cada 15 minutos,
+    // por email o por ip — lo que se alcance primero.
+    const clientIp = getClientIp(req);
+    const { data: allowed, error: rateLimitError } = await adminClient.rpc(
+      "check_and_log_password_reset_attempt",
+      { p_email: body.email, p_ip: clientIp }
+    );
+
+    if (rateLimitError) {
+      return new Response(
+        JSON.stringify({ error: rateLimitError.message }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!allowed) {
+      return new Response(
+        JSON.stringify({ error: RATE_LIMIT_MESSAGE }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
