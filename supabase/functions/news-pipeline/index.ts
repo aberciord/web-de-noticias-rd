@@ -36,7 +36,7 @@ async function fetchSourceImage(pageUrl: string | null | undefined): Promise<str
         return abs;
       }
     }
-  } catch (_e) { /* sin imagen de origen: se usa Pexels */ }
+  } catch { /* sin imagen de origen: se usa Pexels */ }
   return null;
 }
 
@@ -56,7 +56,7 @@ async function findImage(query: string): Promise<string | null> {
         .from("articles").select("id").like("imagen_url", `%pexels-photo-${p.id}.%`).limit(1);
       if (!data || data.length === 0) return url;
     }
-  } catch (_e) { /* la nota se publica sin imagen y el panel puede corregirla */ }
+  } catch { /* la nota se publica sin imagen y el panel puede corregirla */ }
   return null;
 }
 

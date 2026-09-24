@@ -8,7 +8,6 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const PEXELS_API_KEY = Deno.env.get("PEXELS_API_KEY");
 
 const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
@@ -75,7 +74,7 @@ async function fetchSourceImage(pageUrl: string | null | undefined): Promise<str
         return abs;
       }
     }
-  } catch (_e) { /* sin imagen de origen: se usa Pexels */ }
+  } catch { /* sin imagen de origen: se usa Pexels */ }
   return null;
 }
 
