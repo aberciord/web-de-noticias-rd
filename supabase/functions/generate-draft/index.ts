@@ -25,6 +25,29 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "");
+    if (!token) {
+      return new Response(
+        JSON.stringify({ error: "No autenticado" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const { data: userData, error: userError } = await supabase.auth.getUser(token);
+    if (userError || !userData.user) {
+      return new Response(
+        JSON.stringify({ error: "No autenticado" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const { data: editorRow } = await supabase
+      .from("editors").select("id").eq("id", userData.user.id).maybeSingle();
+    if (!editorRow) {
+      return new Response(
+        JSON.stringify({ error: "No autorizado" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const body: GenerateDraftRequest = await req.json();
 
     if (!body.input_text || body.input_text.trim().length < 10) {

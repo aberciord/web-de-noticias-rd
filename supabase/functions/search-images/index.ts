@@ -1,8 +1,14 @@
+import { createClient } from "npm:@supabase/supabase-js@2.57.4";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
 const PEXELS_API_KEY = Deno.env.get("PEXELS_API_KEY");
 
@@ -22,6 +28,29 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "");
+    if (!token) {
+      return new Response(
+        JSON.stringify({ error: "No autenticado" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const { data: userData, error: userError } = await adminClient.auth.getUser(token);
+    if (userError || !userData.user) {
+      return new Response(
+        JSON.stringify({ error: "No autenticado" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const { data: editorRow } = await adminClient
+      .from("editors").select("id").eq("id", userData.user.id).maybeSingle();
+    if (!editorRow) {
+      return new Response(
+        JSON.stringify({ error: "No autorizado" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const query = searchParams.get("query")?.trim();
 
