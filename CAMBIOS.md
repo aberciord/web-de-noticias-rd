@@ -164,10 +164,54 @@ prueba funcional en vivo** -- ver justificacion abajo.
 
 ---
 
+## f. Actualizar react-router-dom/react-router
+
+**Archivos modificados:** `package.json`, `package-lock.json`
+
+**Que se hizo:** `npm audit` reportaba `react-router`/`react-router-dom` en
+el rango `>=6.0.0 <7.18.0` (moderado: open redirect via backslash en
+`<Link>`/`useNavigate`, y arbitrary constructor injection en
+`deserializeErrors()` para SSR -- esto ultimo no aplica, el sitio es una
+SPA sin SSR). Se subio `react-router-dom` de `^6.30.6` a `^7.18.4`
+(version parcheada; `react-router` se actualiza junto como dependencia
+transitiva).
+
+Es un salto de version mayor (v6 -> v7). Se revizo el codigo antes de
+subir: solo usa las APIs estables de "library mode" (`BrowserRouter`,
+`Routes`, `Route`, `Navigate`, `Link`, `NavLink`, `useNavigate`,
+`useParams`, `useLocation`), que React Router mantiene compatibles en
+v7, y no hay navegacion relativa (`to=".."`) en ningun `Link`/
+`navigate()` del proyecto -- que es lo unico que cambia de
+comportamiento por defecto entre v6 y v7 (future flag
+`v7_relativeSplatPath`, relevante porque el panel de admin usa rutas
+anidadas bajo `/panel-8f3k2qx9/*`).
+
+**Prueba:** `npm audit` ya no reporta `react-router`/`react-router-dom`
+(quedan solo vulnerabilidades preexistentes de devDependencies de build
+-- eslint, vite, esbuild -- fuera del alcance de este punto).
+`npm run typecheck`/`lint`/`build` pasan limpio.
+
+⚠️ **A diferencia de (e), esto SI conviene verificarse visualmente en un
+Vercel preview antes de aprobar produccion** (no hace falta una prueba
+tipo curl/API como (b)/(c), pero tampoco basta con typecheck/build como
+(d)/(e)): aunque el analisis estatico y el build no muestran ningun
+problema, es una libreria de enrutamiento -- el navegador ejecuta su
+logica de matching de rutas en tiempo real, y typecheck/build no
+prueban que cada ruta siga resolviendo al componente correcto en
+runtime. Recomendado antes del deploy final: abrir el preview y
+click-through rapido por home, una categoria, un articulo, y el panel
+de admin (login -> dashboard -> alguna otra seccion) para confirmar
+que las rutas siguen funcionando.
+
+**Resultado:** ✅ aplicado y sin vulnerabilidad; pendiente verificacion
+visual en preview.
+
+---
+
 ## Pendiente (según el orden del informe)
 
-- [ ] f. Actualizar `react-router-dom`/`react-router`
 - [ ] g. Optimizar `logo.png` y reportar uso de banners sueltos en `public/`
+- [ ] Verificacion visual de (f) en Vercel preview (click-through de rutas)
 - [ ] Revisión final del usuario antes de cualquier despliegue a producción
 
 **No se ha desplegado nada a producción. No se ha tocado
