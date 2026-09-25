@@ -11,7 +11,7 @@ const EMPTY_FORM = {
   answer_2: '',
 };
 
-const EMPTY_OWN_QUESTIONS = { question_1: '', answer_1: '', question_2: '', answer_2: '', new_password: '' };
+const EMPTY_OWN_QUESTIONS = { question_1: '', answer_1: '', question_2: '', answer_2: '', new_password: '', current_password: '' };
 
 export default function EditorsManager() {
   const [form, setForm] = useState(EMPTY_FORM);
@@ -149,6 +149,19 @@ export default function EditorsManager() {
               placeholder="Déjalo vacío para no cambiarla"
             />
           </div>
+          {ownQuestions.new_password && (
+            <div className="relative mt-1.5">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="password"
+                required
+                value={ownQuestions.current_password}
+                onChange={(e) => setOwnQuestions({ ...ownQuestions, current_password: e.target.value })}
+                className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none"
+                placeholder="Confirma tu contraseña actual"
+              />
+            </div>
+          )}
         </div>
 
         {ownError && (

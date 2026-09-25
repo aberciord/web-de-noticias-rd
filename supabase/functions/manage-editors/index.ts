@@ -29,6 +29,11 @@ interface SetOwnQuestionsRequest {
   question_2: string;
   answer_2: string;
   new_password?: string;
+  // Obligatoria cuando se manda new_password: confirma que quien tiene la
+  // sesion abierta sigue siendo dueno de la cuenta antes de cambiar la
+  // contrasena (una sesion olvidada abierta en una compu compartida no
+  // deberia bastar para eso).
+  current_password?: string;
 }
 
 Deno.serve(async (req: Request) => {
@@ -81,6 +86,29 @@ Deno.serve(async (req: Request) => {
           JSON.stringify({ error: "La contraseña nueva necesita al menos 6 caracteres" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
+      }
+
+      if (body.new_password) {
+        if (!body.current_password) {
+          return new Response(
+            JSON.stringify({ error: "Escribe tu contraseña actual para poder cambiarla" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        // Verifica la contraseña actual iniciando sesion con ella en un
+        // cliente aparte (no toca la sesion del caller). Un error aqui
+        // significa que no coincide.
+        const verifyClient = createClient(SUPABASE_URL, ANON_KEY);
+        const { error: verifyError } = await verifyClient.auth.signInWithPassword({
+          email: userData.user.email!,
+          password: body.current_password,
+        });
+        if (verifyError) {
+          return new Response(
+            JSON.stringify({ error: "La contraseña actual no es correcta" }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
       }
 
       const { error: ownQuestionsError } = await adminClient.rpc("set_editor_security_questions", {
