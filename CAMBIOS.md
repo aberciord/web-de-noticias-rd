@@ -144,9 +144,28 @@ de la app, pero tampoco rompen nada).
 
 ---
 
+## e. Restringir CORS de las Edge Functions al dominio real
+
+**Archivos modificados:** `supabase/functions/{fix-article-images,generate-draft,
+manage-editors,news-pipeline,poll-actions,reset-password-questions,
+search-images}/index.ts`
+
+**Que se hizo:** las 7 Edge Functions que enviaban
+`Access-Control-Allow-Origin: "*"` (cualquier sitio podia invocarlas desde
+el navegador) ahora responden `Access-Control-Allow-Origin:
+"https://elpoderdelpueblord.com"` unicamente. Cambio de un solo valor
+literal por archivo, sin tocar logica.
+
+**Prueba:** validado por `npm run typecheck`/`lint`/`build` (limpios) y
+confirmado por `grep` que las 7 quedaron con el valor exacto. **No requiere
+prueba funcional en vivo** -- ver justificacion abajo.
+
+**Resultado:** ✅ aplicado.
+
+---
+
 ## Pendiente (según el orden del informe)
 
-- [ ] e. Restringir CORS de las Edge Functions al dominio real
 - [ ] f. Actualizar `react-router-dom`/`react-router`
 - [ ] g. Optimizar `logo.png` y reportar uso de banners sueltos en `public/`
 - [ ] Revisión final del usuario antes de cualquier despliegue a producción
