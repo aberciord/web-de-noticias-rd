@@ -208,11 +208,71 @@ visual en preview.
 
 ---
 
-## Pendiente (según el orden del informe)
+## g. Optimizar logo.png y reportar banners sueltos en public/
 
-- [ ] g. Optimizar `logo.png` y reportar uso de banners sueltos en `public/`
-- [ ] Verificacion visual de (f) en Vercel preview (click-through de rutas)
-- [ ] Revisión final del usuario antes de cualquier despliegue a producción
+**Archivo modificado:** `public/logo.png`
+
+**Que se hizo:** el logo se muestra como maximo a 80x80px en la UI
+(`AdminLogin.tsx`, `h-20 w-20`); en el resto de usos (header publico,
+header admin, favicon) es aun mas chico. El archivo original pesaba
+857KB a 1254x1254px -- se descargaba entero en cada carga de pagina para
+mostrarse ~15 veces mas chico de lo necesario. Se redimensiono a
+256x256px (cubre el uso mas grande a resolucion retina/2x con margen) y
+se recomprimio: **857KB -> 55KB (94% mas liviano)**. Misma ruta
+(`/logo.png`), ningun cambio de codigo.
+
+**Prueba:** `npm run build` limpio; es un archivo estatico, no afecta
+typecheck/lint. Verificacion visual pendiente (que el logo se vea nitido)
+-- se puede confirmar junto con el resto del click-through en preview.
+
+**Resultado:** ✅ aplicado.
+
+### Banners sueltos en public/ -- REPORTE (no se eliminaron, solo se
+confirma su uso, segun tu instruccion explicita)
+
+Busque cada nombre de archivo en todo `src/`, `index.html`,
+`vercel.json` y `supabase/` -- **ninguno de los 4 esta referenciado en
+ningun lado del codigo**. El sistema de banners del sitio es dinamico:
+se gestiona desde el panel de admin (`BannersManager.tsx`) contra la
+tabla `banners` de Supabase, con `imagen_url` apuntando a lo que suba
+cada editor -- no a estos archivos fijos en `public/`.
+
+De paso encontre un quinto archivo del mismo patron que tampoco esta
+usado: `banner-header-2.png`.
+
+| Archivo | Tamano | ¿En uso? |
+|---|---|---|
+| `public/banner-header.png` | 1.93 MB | ❌ no referenciado |
+| `public/banner-header-2.png` | 65 KB | ❌ no referenciado |
+| `public/banner-entre-articulos.png` | 1.82 MB | ❌ no referenciado |
+| `public/banner-sidebar.png` | 980 KB | ❌ no referenciado |
+| `public/banner-footer.jpg` | 636 KB | ❌ no referenciado |
+
+**Total: ~5.4 MB** de archivos huerfanos que se despliegan igual en
+cada build (Vite copia todo `public/` tal cual a `dist/`) y quedan
+accesibles publicamente por su URL directa aunque ninguna pagina los
+enlace. Quedan **sin tocar** -- si confirmas que no se usan, se pueden
+borrar manualmente desde el Finder o con permiso de borrado en este
+mismo entorno.
+
+---
+
+## Pendiente antes de aprobar produccion
+
+- [ ] Verificacion visual de (f) en Vercel preview: click-through por
+      home, una categoria, un articulo, y el panel de admin
+      (login -> dashboard -> otra seccion), confirmando que las rutas
+      siguen resolviendo bien tras el salto de react-router v6 -> v7.
+- [ ] Verificacion visual de que el logo (256x256) se ve nitido en
+      header publico, header admin, login y favicon.
+- [ ] Decision tuya sobre los 5 banners huerfanos en `public/`
+      (~5.4 MB): borrarlos o dejarlos.
+- [ ] El punto 1.1 del informe (arquitectura de comentarios publicos)
+      sigue deliberadamente fuera de esta rama -- decision de producto
+      aparte.
+- [ ] Revision final tuya y aprobacion explicita antes de cualquier
+      despliegue a produccion. **No se ha tocado
+      `elpoderdelpueblord.com` en ningun momento de este proceso.**
 
 **No se ha desplegado nada a producción. No se ha tocado
 `elpoderdelpueblord.com` en ningún momento.**
