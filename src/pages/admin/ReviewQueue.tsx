@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Filter, Clock, CheckCircle, XCircle, Globe } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { adminSupabase as supabase } from '@/lib/adminSupabase';
 import { CATEGORIAS, ESTADOS, getEstadoColor, getEstadoLabel } from '@/lib/types';
 import type { Article, Categoria, EstadoArticulo } from '@/lib/types';
 import { tiempoRelativo } from '@/lib/format';

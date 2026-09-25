@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { UserPlus, Mail, Lock, ShieldQuestion, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { adminFunctionFetch } from '@/lib/adminSupabase';
 
 const EMPTY_FORM = {
   email: '',
@@ -31,15 +31,9 @@ export default function EditorsManager() {
     setSavingOwn(true);
 
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-editors`;
-
-      const response = await fetch(apiUrl, {
+      const response = await adminFunctionFetch('manage-editors', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${sessionData.session?.access_token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'set_own_questions', ...ownQuestions }),
       });
 
@@ -61,15 +55,9 @@ export default function EditorsManager() {
     setSaving(true);
 
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-editors`;
-
-      const response = await fetch(apiUrl, {
+      const response = await adminFunctionFetch('manage-editors', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${sessionData.session?.access_token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
 

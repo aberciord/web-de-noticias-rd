@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AlertCircle, BarChart3, Plus, Trash2, Power } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { adminSupabase as supabase } from '@/lib/adminSupabase';
 import type { Poll, PollOption } from '@/lib/types';
 
 type Counts = Record<PollOption, number>;

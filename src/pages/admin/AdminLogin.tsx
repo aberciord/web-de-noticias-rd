@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, AlertCircle, CheckCircle2, ShieldCheck } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 
 type Mode = 'signin' | 'mfa_verify' | 'forgot_email' | 'forgot_questions' | 'forgot_done';
 
 export default function AdminLogin() {
-  const { signIn, user, loading: authLoading, aal, mfaLoading, refreshMfa } = useAuth();
+  const { signIn, user, loading: authLoading, aal, mfaLoading, mfaFactors, verifyMfa } = useAuth();
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>('signin');
   const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
@@ -19,18 +18,16 @@ export default function AdminLogin() {
     // no lo verificó en esta sesión), se le pide el código antes de entrar.
     if (aal && aal.next === 'aal2' && aal.current !== 'aal2') {
       if (mode !== 'mfa_verify') {
-        supabase.auth.mfa.listFactors().then(({ data }) => {
-          const factor = data?.totp.find((f) => f.status === 'verified');
-          if (factor) {
-            setMfaFactorId(factor.id);
-            setMode('mfa_verify');
-          }
-        });
+        const factor = mfaFactors.find((f) => f.status === 'verified');
+        if (factor) {
+          setMfaFactorId(factor.id);
+          setMode('mfa_verify');
+        }
       }
       return;
     }
     navigate('/panel-8f3k2qx9/dashboard');
-  }, [authLoading, mfaLoading, user, aal, mode, navigate]);
+  }, [authLoading, mfaLoading, user, aal, mfaFactors, mode, navigate]);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -79,17 +76,13 @@ export default function AdminLogin() {
     }
     setError(null);
     setLoading(true);
-    const { error: verifyError } = await supabase.auth.mfa.challengeAndVerify({
-      factorId: mfaFactorId,
-      code: mfaCode.trim(),
-    });
+    const { error: verifyError } = await verifyMfa(mfaCode.trim(), mfaFactorId ?? undefined);
     setLoading(false);
     if (verifyError) {
       setError('Código incorrecto. Verifica e intenta de nuevo.');
       setMfaCode('');
       return;
     }
-    await refreshMfa();
     navigate('/panel-8f3k2qx9/dashboard');
   };
 

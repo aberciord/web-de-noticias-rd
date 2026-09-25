@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FileEdit, CheckCircle, XCircle, Globe, TrendingUp, Clock, ArrowRight, Zap, AlertTriangle, Image as ImageIcon, Loader2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { adminSupabase as supabase, adminFunctionFetch } from '@/lib/adminSupabase';
 import { CATEGORIAS, ESTADOS, getEstadoColor, getEstadoLabel } from '@/lib/types';
 import type { Article } from '@/lib/types';
 
@@ -40,16 +40,12 @@ export default function AdminDashboard() {
     setFixing(true);
     setFixResult(null);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
       const total: Record<string, { revisados: number; incorrectas: number; corregidas: number }> = {};
       const done: string[] = [];
       for (let i = 0; i < 20; i++) {
-        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fix-article-images`, {
+        const res = await adminFunctionFetch('fix-article-images', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${sessionData.session?.access_token}`,
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ done_ids: done, batch: 6 }),
         });
         const body = await res.json().catch(() => ({}));

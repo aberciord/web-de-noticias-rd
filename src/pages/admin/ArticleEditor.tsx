@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Save, XCircle, Globe, ArrowLeft, Sparkles, AlertCircle, Eye, Image as ImageIcon, Loader2, Upload } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { adminSupabase as supabase, adminFunctionFetch } from '@/lib/adminSupabase';
 import { CATEGORIAS, ESTADOS, getEstadoColor, getEstadoLabel } from '@/lib/types';
 import type { Article, EstadoArticulo } from '@/lib/types';
-import { useAuth } from '@/context/AuthContext';
 import { uploadImage } from '@/lib/uploadImage';
 
 interface PexelsResult {
@@ -18,7 +17,6 @@ interface PexelsResult {
 export default function ArticleEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const isEditing = Boolean(id);
 
   const [article, setArticle] = useState<Partial<Article>>({
@@ -143,21 +141,9 @@ export default function ArticleEditor() {
     setError(null);
 
     try {
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-draft`;
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-      };
-      if (user) {
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (sessionData.session?.access_token) {
-          headers['Authorization'] = `Bearer ${sessionData.session.access_token}`;
-        }
-      }
-
-      const response = await fetch(apiUrl, {
+      const response = await adminFunctionFetch('generate-draft', {
         method: 'POST',
-        headers,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ input_text: genInput, categoria: article.categoria }),
       });
 
@@ -196,12 +182,8 @@ export default function ArticleEditor() {
     setImageError(null);
 
     try {
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/search-images?query=${encodeURIComponent(imageQuery)}`;
-      const { data: sessionData } = await supabase.auth.getSession();
-      const response = await fetch(apiUrl, {
-        headers: {
-          Authorization: `Bearer ${sessionData.session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
+      const response = await adminFunctionFetch('search-images', {
+        query: `?query=${encodeURIComponent(imageQuery)}`,
       });
 
       if (!response.ok) {
