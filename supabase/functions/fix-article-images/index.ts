@@ -52,9 +52,68 @@ function buildQuery(titulo: string, categoria: string): string {
   return CATEGORY_FALLBACK[categoria] ?? "news";
 }
 
+// Evita SSRF: no seguir fuente_url si no es http(s) publico o si resuelve a una
+// IP privada/loopback/link-local (incluye el endpoint de metadatos de nube
+// 169.254.169.254). No es infalible contra DNS rebinding (el fetch real hace
+// su propia resolucion despues), pero bloquea el caso comun de un fuente_url
+// manipulado para apuntar a la red interna.
+function isBlockedIp(hostname: string): boolean {
+  // IPv4 literal
+  const v4 = hostname.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (v4) {
+    const [a, b] = [Number(v4[1]), Number(v4[2])];
+    if (a === 10) return true; // 10.0.0.0/8
+    if (a === 127) return true; // 127.0.0.0/8 loopback
+    if (a === 0) return true; // 0.0.0.0/8
+    if (a === 169 && b === 254) return true; // 169.254.0.0/16 (incl. metadatos de nube)
+    if (a === 172 && b >= 16 && b <= 31) return true; // 172.16.0.0/12
+    if (a === 192 && b === 168) return true; // 192.168.0.0/16
+    if (a === 100 && b >= 64 && b <= 127) return true; // 100.64.0.0/10 (CGNAT)
+    return false;
+  }
+  // IPv6 literal (con o sin corchetes)
+  const v6 = hostname.replace(/^\[|\]$/g, "").toLowerCase();
+  if (v6 === "::1") return true; // loopback
+  if (v6.startsWith("fe80:") || v6.startsWith("fc") || v6.startsWith("fd")) return true; // link-local / unique local
+  return false;
+}
+
+async function isSafeExternalUrl(pageUrl: string): Promise<boolean> {
+  let url: URL;
+  try {
+    url = new URL(pageUrl);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") return false;
+
+  const hostname = url.hostname;
+  if (hostname === "localhost" || hostname.endsWith(".localhost") || hostname.endsWith(".local")) return false;
+  if (hostname === "metadata.google.internal") return false;
+  if (isBlockedIp(hostname)) return false;
+
+  // Si el host no es una IP literal, resolvemos DNS y validamos las IPs
+  // reales (evita que un dominio publico apunte a una IP interna).
+  const isLiteralIp = /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname) || hostname.includes(":");
+  if (!isLiteralIp) {
+    try {
+      const records = await Deno.resolveDns(hostname, "A").catch(() => []);
+      const records6 = await Deno.resolveDns(hostname, "AAAA").catch(() => []);
+      for (const ip of [...records, ...records6]) {
+        if (isBlockedIp(ip)) return false;
+      }
+    } catch {
+      // Si no se puede resolver, dejamos que el fetch normal falle despues;
+      // no bloqueamos por un error de resolucion en si mismo.
+    }
+  }
+  return true;
+}
+
 // Imagen original de la noticia (og:image / twitter:image de la página fuente).
 async function fetchSourceImage(pageUrl: string | null | undefined): Promise<string | null> {
   if (!pageUrl) return null;
+  if (!(await isSafeExternalUrl(pageUrl))) return null;
   try {
     const r = await fetch(pageUrl, {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; ElPoderDelPuebloBot/1.0)" },
