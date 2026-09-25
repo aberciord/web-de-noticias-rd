@@ -101,27 +101,54 @@ Se verificó explícitamente que el flujo de "olvidé mi contraseña"
 queda fuera de este cambio — ahí no tiene sentido pedir la contraseña
 actual porque el usuario no la recuerda.
 
-**Prueba funcional:** ⚠️ **pendiente** — este flujo requiere invocar la
-Edge Function `manage-editors` con una sesión de editor autenticada
-(login + MFA), y no se pudo probar en el mismo proyecto de prueba vacío sin
-levantar todo el esquema de `editors`/auth. Queda como prueba manual a
-hacer en un Vercel preview antes de aprobar el despliegue:
-1. Entrar al panel de editor → "Mis preguntas de seguridad".
-2. Escribir una contraseña nueva sin llenar "contraseña actual" → debe
-   pedir el campo (frontend) / rechazar con 400 si se fuerza por API.
-3. Escribir una contraseña actual incorrecta → debe responder 401 "La
-   contraseña actual no es correcta".
-4. Escribir la contraseña actual correcta → debe aceptar el cambio.
+**Prueba funcional (mismo proyecto Supabase de PRUEBA `ouftaqsruulyioqljkwa`):**
+1. Se agregaron al proyecto de prueba las tablas `editors` y
+   `editor_security_questions` + la funcion `set_editor_security_questions`
+   (SQL identico a `20260910130000_secure_admin_access.sql` y
+   `20260916140000_editor_security_questions.sql`).
+2. Se creo un usuario de prueba en Authentication -> Users y se inserto su
+   fila en `editors`.
+3. Se desplego `manage-editors` (codigo identico al de la rama).
+4. Se inicio sesion como ese usuario (via el endpoint de password grant) y
+   se llamo a `set_own_questions` tres veces:
+   - Sin `current_password` (con `new_password` presente): **`HTTP 400`**
+     -- `{"error":"Escribe tu contrasena actual para poder cambiarla"}`.
+   - Con `current_password` incorrecta: **`HTTP 401`** --
+     `{"error":"La contrasena actual no es correcta"}`.
+   - Con `current_password` correcta: **`HTTP 200`** -- `{"success":true}`.
+
+**Resultado:** ✅ funciona exactamente como se diseño.
+
+---
+
+## d. Validar host de `fuente_url` en fix-article-images (anti-SSRF)
+
+**Archivo modificado:** `supabase/functions/fix-article-images/index.ts`
+
+**Que se hizo:** `fetchSourceImage()` seguia `fuente_url` (dato en la tabla
+`articles`) sin validar el destino antes de hacer `fetch()` desde la Edge
+Function (que corre con service role). Se agrego `isSafeExternalUrl()`:
+solo permite esquemas `http`/`https`, rechaza `localhost`/`.local`/
+`metadata.google.internal`, rechaza IPs literales en rangos privados/
+loopback/link-local/CGNAT (incluye `169.254.169.254`, el endpoint de
+metadatos de nube), y para hostnames no literales resuelve DNS (A/AAAA) y
+valida tambien esas IPs antes de seguir.
+
+**Prueba:** no requiere prueba funcional contra Supabase (no cambia
+autenticacion ni datos, solo que URLs se siguen); validado por
+`npm run build`/`typecheck`/`lint` (los Edge Functions de Deno no forman
+parte del tsconfig del frontend, asi que no los afecta el chequeo de tipos
+de la app, pero tampoco rompen nada).
+
+**Resultado:** ✅ aplicado.
 
 ---
 
 ## Pendiente (según el orden del informe)
 
-- [ ] d. Validar host de `fuente_url` en `fix-article-images` (anti-SSRF)
 - [ ] e. Restringir CORS de las Edge Functions al dominio real
 - [ ] f. Actualizar `react-router-dom`/`react-router`
 - [ ] g. Optimizar `logo.png` y reportar uso de banners sueltos en `public/`
-- [ ] Prueba manual de (c) en Vercel preview
 - [ ] Revisión final del usuario antes de cualquier despliegue a producción
 
 **No se ha desplegado nada a producción. No se ha tocado
