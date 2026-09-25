@@ -1,24 +1,30 @@
 import { useState } from 'react';
 import { Mail, CheckCircle2, AlertCircle } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { pollApi, PollApiError } from '@/lib/pollApi';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function NewsletterSignup() {
   const { language } = useLanguage();
   const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error' | 'rate_limited'>('idle');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
     setStatus('loading');
 
-    const { error } = await supabase.from('newsletter_subscribers').insert({ email: email.trim().toLowerCase() });
-
-    if (error) {
-      setStatus(error.code === '23505' ? 'success' : 'error');
-    } else {
+    // La validación del correo y el límite de intentos (por IP) viven en la
+    // Edge Function poll-actions, la misma que ya usan las encuestas — así el
+    // boletín no queda como el único formulario público sin rate limiting.
+    try {
+      await pollApi.subscribe(email.trim().toLowerCase());
       setStatus('success');
+    } catch (err) {
+      if (err instanceof PollApiError && err.code === 'rate_limited') {
+        setStatus('rate_limited');
+      } else {
+        setStatus('error');
+      }
     }
   };
 
@@ -66,6 +72,15 @@ export default function NewsletterSignup() {
           <div className="flex items-center justify-center gap-2 mt-3 text-red-200 text-sm">
             <AlertCircle className="w-4 h-4" />
             {language === 'en' ? 'Something went wrong. Try again.' : 'Algo salió mal. Intenta de nuevo.'}
+          </div>
+        )}
+
+        {status === 'rate_limited' && (
+          <div className="flex items-center justify-center gap-2 mt-3 text-red-200 text-sm">
+            <AlertCircle className="w-4 h-4" />
+            {language === 'en'
+              ? 'Too many attempts. Please wait a few minutes and try again.'
+              : 'Demasiados intentos. Espera unos minutos e intenta de nuevo.'}
           </div>
         )}
       </div>
