@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { MessageCircle, Send, Trash2, Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { adminSupabase } from '@/lib/adminSupabase';
 import { useAuth } from '@/context/AuthContext';
 import { tiempoRelativo } from '@/lib/format';
 import type { Comment } from '@/lib/types';
@@ -72,7 +73,7 @@ export default function CommentSection({ articleId }: CommentSectionProps) {
 
     const autorNombre = user.email?.split('@')[0] ?? 'Usuario';
 
-    const { error: insertError } = await supabase.from('comments').insert({
+    const { error: insertError } = await adminSupabase.from('comments').insert({
       article_id: articleId,
       autor_nombre: autorNombre,
       contenido: trimmed,
@@ -90,7 +91,7 @@ export default function CommentSection({ articleId }: CommentSectionProps) {
   };
 
   const handleDelete = async (commentId: number) => {
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await adminSupabase
       .from('comments')
       .delete()
       .eq('id', commentId);

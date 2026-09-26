@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Image, Upload, Loader2, Plus, Trash2, Edit3, X, Check, Power } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { adminSupabase as supabase } from '@/lib/adminSupabase';
 import { CATEGORIAS } from '@/lib/types';
 import { uploadImage } from '@/lib/uploadImage';
 import type { Banner, PosicionBanner, Categoria } from '@/lib/types';

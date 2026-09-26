@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Rss, Plus, Trash2, Edit3, X, Check, Power } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { adminSupabase as supabase } from '@/lib/adminSupabase';
 import { CATEGORIAS } from '@/lib/types';
 import type { Source, Categoria } from '@/lib/types';
 

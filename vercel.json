@@ -7,8 +7,11 @@
   ],
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "https://xhfqkhzyoonihxxkwrki.supabase.co/functions/v1/sitemap" },
-    { "source": "/((?!assets/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
+    { "source": "/((?!assets/|api/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
   ],
+  "functions": {
+    "api/sb/[...path].ts": { "maxDuration": 60 }
+  },
   "headers": [
     {
       "source": "/(.*)",

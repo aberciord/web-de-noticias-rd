@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { UserPlus, Mail, Lock, ShieldQuestion, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { adminFunctionFetch } from '@/lib/adminSupabase';
 
 const EMPTY_FORM = {
   email: '',
@@ -11,7 +11,7 @@ const EMPTY_FORM = {
   answer_2: '',
 };
 
-const EMPTY_OWN_QUESTIONS = { question_1: '', answer_1: '', question_2: '', answer_2: '', new_password: '' };
+const EMPTY_OWN_QUESTIONS = { question_1: '', answer_1: '', question_2: '', answer_2: '', new_password: '', current_password: '' };
 
 export default function EditorsManager() {
   const [form, setForm] = useState(EMPTY_FORM);
@@ -31,15 +31,9 @@ export default function EditorsManager() {
     setSavingOwn(true);
 
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-editors`;
-
-      const response = await fetch(apiUrl, {
+      const response = await adminFunctionFetch('manage-editors', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${sessionData.session?.access_token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'set_own_questions', ...ownQuestions }),
       });
 
@@ -61,15 +55,9 @@ export default function EditorsManager() {
     setSaving(true);
 
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-editors`;
-
-      const response = await fetch(apiUrl, {
+      const response = await adminFunctionFetch('manage-editors', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${sessionData.session?.access_token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
 
@@ -161,6 +149,19 @@ export default function EditorsManager() {
               placeholder="Déjalo vacío para no cambiarla"
             />
           </div>
+          {ownQuestions.new_password && (
+            <div className="relative mt-1.5">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="password"
+                required
+                value={ownQuestions.current_password}
+                onChange={(e) => setOwnQuestions({ ...ownQuestions, current_password: e.target.value })}
+                className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none"
+                placeholder="Confirma tu contraseña actual"
+              />
+            </div>
+          )}
         </div>
 
         {ownError && (

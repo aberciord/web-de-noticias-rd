@@ -31,31 +31,13 @@ function AdminLoadingFallback() {
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, aal, mfaLoading } = useAuth();
-  const [checkingEditor, setCheckingEditor] = useState(true);
-  const [isEditor, setIsEditor] = useState(false);
+  const { user, isEditor, loading, aal } = useAuth();
 
-  useEffect(() => {
-    if (!user) {
-      setIsEditor(false);
-      setCheckingEditor(false);
-      return;
-    }
-    setCheckingEditor(true);
-    supabase
-      .from('editors')
-      .select('id')
-      .eq('id', user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        setIsEditor(!!data);
-        setCheckingEditor(false);
-      });
-  }, [user]);
-
-  if (loading || checkingEditor || mfaLoading) {
+  if (loading) {
     return <div className="min-h-screen flex items-center justify-center text-slate-400">Cargando...</div>;
   }
+  // isEditor lo calcula el servidor (api/auth) consultando la tabla editors con
+  // la sesión de la cookie: el mismo chequeo de is_editor() de siempre.
   if (!user || !isEditor) return <Navigate to="/panel-8f3k2qx9" replace />;
 
   // Sesión sin subir a aal2 todavía (tiene 2FA activo pero no lo verificó

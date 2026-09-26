@@ -1,4 +1,5 @@
-import { supabase } from '@/lib/supabase';
+import { adminSupabase } from '@/lib/adminSupabase';
+import { publicStorageUrl } from '@/lib/adminSupabase';
 
 const BUCKET = 'article-images';
 
@@ -40,9 +41,9 @@ function prepareImage(file: File, maxBytes: number): Promise<Blob> {
 export async function uploadImage(file: File, maxBytes = 4 * 1024 * 1024): Promise<string> {
   const blob = await prepareImage(file, maxBytes);
   const path = `${crypto.randomUUID()}.jpg`;
-  const { error } = await supabase.storage
+  const { error } = await adminSupabase.storage
     .from(BUCKET)
     .upload(path, blob, { contentType: 'image/jpeg', cacheControl: '31536000' });
   if (error) throw new Error(error.message);
-  return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+  return publicStorageUrl(BUCKET, path);
 }

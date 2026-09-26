@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, ShieldAlert, AlertCircle, Loader2, Trash2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { authApi } from '@/lib/authApi';
 import { useAuth } from '@/context/AuthContext';
 
 export default function AdminMfaSetup() {
-  const { mfaFactors, mfaLoading, refreshMfa } = useAuth();
+  const { mfaFactors, mfaLoading, verifyMfa, applyStatus } = useAuth();
   const navigate = useNavigate();
 
   const [enrolling, setEnrolling] = useState(false);
@@ -23,19 +23,12 @@ export default function AdminMfaSetup() {
     setError(null);
     setEnrolling(true);
     try {
-      // Limpia factores sin verificar de un intento anterior, para no dejar
-      // basura en la cuenta si el editor no llegó a terminar la activación.
-      const { data: existing } = await supabase.auth.mfa.listFactors();
-      const stale = existing?.all.filter((f) => f.status === 'unverified') ?? [];
-      for (const f of stale) {
-        await supabase.auth.mfa.unenroll({ factorId: f.id });
-      }
-
-      const { data, error: enrollError } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
-      if (enrollError) throw new Error(enrollError.message);
-      setQrCode(data.totp.qr_code);
-      setSecret(data.totp.secret);
-      setFactorId(data.id);
+      // El servidor limpia factores sin verificar de un intento anterior y
+      // crea el nuevo (la sesión viaja en la cookie httpOnly).
+      const data = await authApi.mfaEnroll();
+      setQrCode(data.qrCode);
+      setSecret(data.secret);
+      setFactorId(data.factorId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo iniciar la activación');
       setEnrolling(false);
@@ -51,9 +44,8 @@ export default function AdminMfaSetup() {
     setError(null);
     setSaving(true);
     try {
-      const { error: verifyError } = await supabase.auth.mfa.challengeAndVerify({ factorId, code: code.trim() });
-      if (verifyError) throw new Error(verifyError.message);
-      await refreshMfa();
+      const { error: verifyError } = await verifyMfa(code.trim(), factorId);
+      if (verifyError) throw new Error(verifyError);
       navigate('/panel-8f3k2qx9/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Código incorrecto. Verifica e intenta de nuevo.');
@@ -68,9 +60,7 @@ export default function AdminMfaSetup() {
     setRemoving(true);
     setError(null);
     try {
-      const { error: unenrollError } = await supabase.auth.mfa.unenroll({ factorId: verifiedFactor.id });
-      if (unenrollError) throw new Error(unenrollError.message);
-      await refreshMfa();
+      applyStatus(await authApi.mfaUnenroll(verifiedFactor.id));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo quitar la verificación en dos pasos');
     } finally {
