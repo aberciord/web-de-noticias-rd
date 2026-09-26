@@ -257,12 +257,44 @@ mismo entorno.
 
 ---
 
+## Prueba de click-through en Vercel preview (fix f)
+
+Rama `fix/auditoria-seguridad`, preview de Vercel:
+`https://web-de-noticias-rd-git-fix-auditoria-seguridad-aberciord.vercel.app`
+(variables de entorno de Production, solo lectura -- Opcion B acordada
+con el usuario, sin tocar CSP ni la validacion de keys).
+
+Rutas verificadas manualmente por el usuario:
+
+- `/` (home): carga header, banner, navegacion y seccion de newsletter -- OK.
+- `/categoria/entretenimiento`: lista de articulos carga bien -- OK.
+- `/farandula`: redirige correctamente a `/categoria/entretenimiento`
+  (regla de `vercel.json`) -- OK.
+- `/articulo/<id>` (articulo real): abre completo con titulo, fecha,
+  imagen, autor y sidebar "Mas leido" -- OK.
+- `/panel-8f3k2qx9` (login admin): la pantalla de login carga bien.
+  **No se probo el flujo login -> dashboard -> otra seccion** -- el
+  usuario decidio no iniciar sesion real durante esta prueba (para no
+  interactuar con el panel en un entorno que usa datos/variables de
+  produccion). El MFA/2FA de produccion mostro un error aparte
+  ("Invalid TOTP code entered") al probarlo por error en el dominio
+  real (`elpoderdelpueblord.com`, fuera de esta rama) -- no relacionado
+  con los fixes a-g, no se investigo ni se toco nada al respecto.
+
+Conclusion: no se detectaron problemas de enrutamiento tras el salto de
+react-router v6 -> v7 en las rutas publicas. La navegacion interna del
+panel admin autenticado queda sin verificar visualmente.
+
+---
+
 ## Pendiente antes de aprobar produccion
 
-- [ ] Verificacion visual de (f) en Vercel preview: click-through por
-      home, una categoria, un articulo, y el panel de admin
-      (login -> dashboard -> otra seccion), confirmando que las rutas
-      siguen resolviendo bien tras el salto de react-router v6 -> v7.
+- [x] Verificacion visual de (f) en Vercel preview: home, categoria,
+      articulo, redirect `/farandula`, y carga del login admin --
+      confirmado sin problemas (ver seccion "Prueba de click-through
+      en Vercel preview" arriba). Pendiente: navegacion interna del
+      panel admin ya autenticado (dashboard -> otra seccion), no
+      probada a proposito en este preview.
 - [ ] Verificacion visual de que el logo (256x256) se ve nitido en
       header publico, header admin, login y favicon.
 - [ ] Decision tuya sobre los 5 banners huerfanos en `public/`
